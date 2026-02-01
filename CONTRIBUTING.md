@@ -34,8 +34,8 @@ This project follows a Code of Conduct that all contributors are expected to adh
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/openclaw-security.git
-cd openclaw-security
+git clone https://github.com/PaoloRollo/openclaw-sec.git
+cd openclaw-sec
 ```
 
 2. Install dependencies:

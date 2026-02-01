@@ -94,7 +94,7 @@ async function toolCallHook(input: HookInput): Promise<HookOutput> {
   try {
     // Find config file
     const configPaths = [
-      path.join(process.cwd(), '.openclaw-security.yaml'),
+      path.join(process.cwd(), '.openclaw-sec.yaml'),
       path.join(process.env.HOME || '~', '.openclaw', 'security-config.yaml')
     ];
 
@@ -120,7 +120,7 @@ async function toolCallHook(input: HookInput): Promise<HookOutput> {
     }
 
     // Initialize database
-    const dbPath = config.database?.path || '.openclaw-security.db';
+    const dbPath = config.database?.path || '.openclaw-sec.db';
     const dbManager = new DatabaseManager(dbPath);
 
     // Initialize security engine

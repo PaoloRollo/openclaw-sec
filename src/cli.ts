@@ -32,8 +32,8 @@ async function initializeEngine(): Promise<SecurityEngine> {
   try {
     // Load config from default location or current directory
     const configPaths = [
-      '.openclaw-security.yaml',
-      path.join(process.cwd(), '.openclaw-security.yaml'),
+      '.openclaw-sec.yaml',
+      path.join(process.cwd(), '.openclaw-sec.yaml'),
       path.join(process.env.HOME || '~', '.openclaw', 'security-config.yaml')
     ];
 
@@ -53,7 +53,7 @@ async function initializeEngine(): Promise<SecurityEngine> {
     }
 
     // Initialize database
-    const dbPath = config.database.path || '.openclaw-security.db';
+    const dbPath = config.database.path || '.openclaw-sec.db';
     dbManager = new DatabaseManager(dbPath);
 
     // Initialize engine
@@ -413,7 +413,7 @@ program
   .option('-s, --severity <level>', 'Filter by severity')
   .action(async (options) => {
     try {
-      const dbPath = '.openclaw-security.db';
+      const dbPath = '.openclaw-sec.db';
       if (!fs.existsSync(dbPath)) {
         console.log(chalk.yellow('No database found. No events recorded yet.'));
         return;
@@ -473,7 +473,7 @@ program
   .description('Show security statistics')
   .action(async () => {
     try {
-      const dbPath = '.openclaw-security.db';
+      const dbPath = '.openclaw-sec.db';
       if (!fs.existsSync(dbPath)) {
         console.log(chalk.yellow('No database found. No statistics available.'));
         return;
@@ -505,7 +505,7 @@ program
   .option('-u, --user-id <id>', 'Analyze specific user')
   .action(async (options) => {
     try {
-      const dbPath = '.openclaw-security.db';
+      const dbPath = '.openclaw-sec.db';
       if (!fs.existsSync(dbPath)) {
         console.log(chalk.yellow('No database found. No data to analyze.'));
         return;
@@ -547,7 +547,7 @@ program
   .argument('<user-id>', 'User ID to check')
   .action(async (userId: string) => {
     try {
-      const dbPath = '.openclaw-security.db';
+      const dbPath = '.openclaw-sec.db';
       if (!fs.existsSync(dbPath)) {
         console.log(chalk.yellow('No database found.'));
         return;
@@ -610,8 +610,8 @@ program
   .action(async () => {
     try {
       const configPaths = [
-        '.openclaw-security.yaml',
-        path.join(process.cwd(), '.openclaw-security.yaml'),
+        '.openclaw-sec.yaml',
+        path.join(process.cwd(), '.openclaw-sec.yaml'),
         path.join(process.env.HOME || '~', '.openclaw', 'security-config.yaml')
       ];
 
@@ -669,7 +669,7 @@ program
   .argument('<value>', 'Value to set')
   .action(async (key: string, value: string) => {
     console.log(chalk.yellow('Config modification not yet implemented.'));
-    console.log(chalk.gray('Please edit .openclaw-security.yaml manually.'));
+    console.log(chalk.gray('Please edit .openclaw-sec.yaml manually.'));
   });
 
 /**
@@ -741,7 +741,7 @@ program
   .option('-o, --output <file>', 'Output file')
   .action(async (options) => {
     try {
-      const dbPath = '.openclaw-security.db';
+      const dbPath = '.openclaw-sec.db';
       if (!fs.existsSync(dbPath)) {
         console.log(chalk.yellow('No database found. No data to report.'));
         return;
@@ -765,7 +765,7 @@ program
   .description('Optimize database (VACUUM)')
   .action(async () => {
     try {
-      const dbPath = '.openclaw-security.db';
+      const dbPath = '.openclaw-sec.db';
       if (!fs.existsSync(dbPath)) {
         console.log(chalk.yellow('No database found.'));
         return;

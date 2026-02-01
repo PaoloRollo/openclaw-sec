@@ -4,7 +4,7 @@ import * as path from 'path';
 
 describe('CLI', () => {
   const cliPath = path.join(__dirname, '..', 'cli.ts');
-  const testDbPath = '.openclaw-security-test.db';
+  const testDbPath = '.openclaw-sec-test.db';
 
   beforeEach(() => {
     // Clean up test database

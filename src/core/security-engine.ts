@@ -34,7 +34,7 @@ export interface ValidationMetadata {
  * @example
  * ```typescript
  * const config = await ConfigManager.load('security-config.yaml');
- * const dbManager = new DatabaseManager('.openclaw-security.db');
+ * const dbManager = new DatabaseManager('.openclaw-sec.db');
  * const engine = new SecurityEngine(config, dbManager);
  *
  * const result = await engine.validate('User input text', {

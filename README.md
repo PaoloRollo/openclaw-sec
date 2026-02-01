@@ -13,17 +13,30 @@
 ### Install via ClawdHub (Recommended)
 
 ```bash
-# One command to install and set up everything
 npx clawdhub@latest install openclaw-sec
 ```
 
-That's it! The skill is now installed to `~/.openclaw/skills/openclaw-security/` with hooks enabled for automatic protection.
+That's it! The skill is now installed to `~/.openclaw/workplace/skills/openclaw-sec/` with hooks enabled for automatic protection. Now you need to install the dependencies:
+
+```bash
+cd ~/.openclaw/workplace/skills/openclaw-sec
+npm install
+```
+
+Once this is done, you need to setup the configuration files:
+
+```bash
+cp config.example.yaml config.yaml
+cp .openclaw-sec.example.yaml .openclaw-sec.yaml
+```
+
+Read more about this in the [Configuration](#configuration) section.
 
 ### Test the Installation
 
 ```bash
 # Navigate to the skill directory
-cd ~/.openclaw/skills/openclaw-security
+cd ~/.openclaw/workplace/skills/openclaw-sec
 
 # Test a command validation
 npm run dev validate-command "ls -la"
@@ -196,7 +209,7 @@ Install directly to OpenClaw using ClawdHub:
 npx clawdhub@latest install openclaw-sec
 ```
 
-This automatically installs the skill to `~/.openclaw/skills/openclaw-security/` and sets up hooks for automatic protection.
+This automatically installs the skill to `~/.openclaw/workplace/skills/openclaw-sec/` and sets up hooks for automatic protection.
 
 ### From Source
 
@@ -219,7 +232,7 @@ npm run build
 
 ### Configuration File
 
-Create `.openclaw-security.yaml` in your project root:
+Create `.openclaw-sec.yaml` in your project root:
 
 ```yaml
 openclaw_security:
@@ -291,7 +304,7 @@ openclaw_security:
 
   # Database
   database:
-    path: .openclaw-security.db
+    path: .openclaw-sec.db
     analytics_enabled: true
     retention_days: 365
 ```
@@ -309,7 +322,7 @@ openclaw_security:
 
 OpenClaw searches for config in this order:
 
-1. `./.openclaw-security.yaml` (current directory)
+1. `./.openclaw-sec.yaml` (current directory)
 2. `~/.openclaw/security-config.yaml` (home directory)
 3. Default configuration (built-in)
 
@@ -384,8 +397,8 @@ import { ConfigManager } from 'openclaw-sec';
 import { DatabaseManager } from 'openclaw-sec';
 
 // Initialize
-const config = await ConfigManager.load('.openclaw-security.yaml');
-const db = new DatabaseManager('.openclaw-security.db');
+const config = await ConfigManager.load('.openclaw-sec.yaml');
+const db = new DatabaseManager('.openclaw-sec.db');
 const engine = new SecurityEngine(config, db);
 
 // Validate input
@@ -671,14 +684,14 @@ OpenClaw uses SQLite for storage with 5 tables:
 
 ```bash
 # View schema
-sqlite3 .openclaw-security.db ".schema"
+sqlite3 .openclaw-sec.db ".schema"
 
 # Count events by severity
-sqlite3 .openclaw-security.db \
+sqlite3 .openclaw-sec.db \
   "SELECT severity, COUNT(*) FROM security_events GROUP BY severity;"
 
 # Top attacked users
-sqlite3 .openclaw-security.db \
+sqlite3 .openclaw-sec.db \
   "SELECT user_id, COUNT(*) as attacks FROM security_events
    WHERE action_taken = 'block'
    GROUP BY user_id
@@ -686,7 +699,7 @@ sqlite3 .openclaw-security.db \
    LIMIT 10;"
 
 # Events in last 24 hours
-sqlite3 .openclaw-security.db \
+sqlite3 .openclaw-sec.db \
   "SELECT * FROM security_events
    WHERE timestamp > datetime('now', '-1 day')
    ORDER BY timestamp DESC;"
@@ -699,7 +712,7 @@ sqlite3 .openclaw-security.db \
 openclaw-sec db-vacuum
 
 # Delete old events (manual)
-sqlite3 .openclaw-security.db \
+sqlite3 .openclaw-sec.db \
   "DELETE FROM security_events WHERE timestamp < datetime('now', '-30 days');"
 ```
 
@@ -927,7 +940,7 @@ describe('Custom Security Tests', () => {
 
 ### Issue: Database Growing Too Large
 
-**Symptoms:** `.openclaw-security.db` file very large.
+**Symptoms:** `.openclaw-sec.db` file very large.
 
 **Solutions:**
 1. Reduce retention:

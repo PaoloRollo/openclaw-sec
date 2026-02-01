@@ -27,7 +27,7 @@ const handler: HookHandler = async (event) => {
 
     // Find config file
     const configPaths = [
-      path.join(process.cwd(), ".openclaw-security.yaml"),
+      path.join(process.cwd(), ".openclaw-sec.yaml"),
       path.join(process.env.HOME || "~", ".openclaw", "security-config.yaml"),
     ];
 

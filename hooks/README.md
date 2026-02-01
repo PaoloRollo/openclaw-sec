@@ -123,13 +123,13 @@ Hooks use the same configuration as the OpenClaw Security Suite.
 
 ### Config File Locations (in priority order):
 
-1. `./.openclaw-security.yaml` (current directory)
+1. `./.openclaw-sec.yaml` (current directory)
 2. `~/.openclaw/security-config.yaml` (user home directory)
 3. Default configuration (if no file found)
 
 ### Example Configuration
 
-Create `~/.openclaw/security-config.yaml` or `.openclaw-security.yaml`:
+Create `~/.openclaw/security-config.yaml` or `.openclaw-sec.yaml`:
 
 ```yaml
 openclaw_security:
@@ -158,7 +158,7 @@ openclaw_security:
     CRITICAL: block_notify
 
   database:
-    path: .openclaw-security.db
+    path: .openclaw-sec.db
     analytics_enabled: true
     retention_days: 365
 

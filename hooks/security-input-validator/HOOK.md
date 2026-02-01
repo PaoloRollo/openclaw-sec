@@ -30,7 +30,7 @@ This hook intercepts user prompts at the `command:new` event and performs compre
 The hook uses the OpenClaw Security configuration file:
 
 **Config File Locations** (in priority order):
-1. `./openclaw-security.yaml` (current directory)
+1. `./openclaw-sec.yaml` (current directory)
 2. `~/.openclaw/security-config.yaml` (home directory)
 3. Default configuration
 

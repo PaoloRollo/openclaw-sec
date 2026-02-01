@@ -356,11 +356,11 @@ openclaw-sec config
 ```
 ⚙️  Configuration
 
-Config File: .openclaw-security.yaml
+Config File: .openclaw-sec.yaml
 
 Status: Enabled
 Sensitivity: medium
-Database: .openclaw-security.db
+Database: .openclaw-sec.db
 
 Modules:
   ✓ prompt_injection
@@ -457,7 +457,7 @@ Optimizing database...
 
 ## Configuration
 
-Configuration file: `.openclaw-security.yaml`
+Configuration file: `.openclaw-sec.yaml`
 
 ### Example Configuration
 
@@ -540,7 +540,7 @@ openclaw_security:
 
   # Database
   database:
-    path: .openclaw-security.db
+    path: .openclaw-sec.db
     analytics_enabled: true
     retention_days: 365
 ```
@@ -779,14 +779,14 @@ modules:
 
 ```bash
 # View database schema
-sqlite3 .openclaw-security.db ".schema"
+sqlite3 .openclaw-sec.db ".schema"
 
 # Count events by severity
-sqlite3 .openclaw-security.db \
+sqlite3 .openclaw-sec.db \
   "SELECT severity, COUNT(*) FROM security_events GROUP BY severity;"
 
 # Top attacked users
-sqlite3 .openclaw-security.db \
+sqlite3 .openclaw-sec.db \
   "SELECT user_id, COUNT(*) as attacks FROM security_events
    WHERE action_taken = 'block' GROUP BY user_id ORDER BY attacks DESC LIMIT 10;"
 ```
@@ -803,8 +803,8 @@ import { ConfigManager } from 'openclaw-sec';
 import { DatabaseManager } from 'openclaw-sec';
 
 // Initialize
-const config = await ConfigManager.load('.openclaw-security.yaml');
-const db = new DatabaseManager('.openclaw-security.db');
+const config = await ConfigManager.load('.openclaw-sec.yaml');
+const db = new DatabaseManager('.openclaw-sec.db');
 const engine = new SecurityEngine(config, db);
 
 // Validate input
@@ -973,8 +973,8 @@ openclaw-sec test
 │   ├── tool-call-hook.ts
 │   ├── install-hooks.sh
 │   └── README.md
-├── .openclaw-security.yaml     # Configuration
-└── .openclaw-security.db       # Database
+├── .openclaw-sec.yaml     # Configuration
+└── .openclaw-sec.db       # Database
 ```
 
 ---

@@ -49,7 +49,7 @@ export class ConfigManager {
         retention_days: 90
       },
       database: {
-        path: '.openclaw-security.db',
+        path: '.openclaw-sec.db',
         analytics_enabled: true,
         retention_days: 365
       }

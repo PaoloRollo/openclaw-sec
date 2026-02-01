@@ -32,7 +32,7 @@ describe('ConfigManager', () => {
       expect(config).toHaveProperty('enabled');
       expect(config).toHaveProperty('database');
       expect(config).toHaveProperty('modules');
-      expect(config.database.path).toBe('.openclaw-security.db');
+      expect(config.database.path).toBe('.openclaw-sec.db');
       expect(config.sensitivity).toBe('medium');
     });
   });

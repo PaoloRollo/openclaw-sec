@@ -102,6 +102,6 @@ openclaw_security:
 
   # Database configuration
   database:
-    path: .openclaw-security.db
+    path: .openclaw-sec.db
     analytics_enabled: true
     retention_days: 365
