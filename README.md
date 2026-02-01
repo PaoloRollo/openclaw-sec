@@ -19,24 +19,20 @@ npx clawdhub@latest install openclaw-sec
 
 That's it! The skill is now installed to `~/.openclaw/skills/openclaw-security/` with hooks enabled for automatic protection.
 
-### Or Install via NPM
+### Test the Installation
 
 ```bash
-# Install
-npm install openclaw-sec
+# Navigate to the skill directory
+cd ~/.openclaw/skills/openclaw-security
 
-# Initialize configuration
-cp node_modules/openclaw-sec/.openclaw-security.example.yaml .openclaw-security.yaml
-
-# Test a command
-npx openclaw-sec validate-command "ls -la"
+# Test a command validation
+npm run dev validate-command "ls -la"
 
 # Run comprehensive scan
-npx openclaw-sec check-all "Your input text"
+npm run dev check-all "Your input text"
 
-# Install hooks for automatic protection
-cd node_modules/openclaw-sec/hooks
-./install-hooks.sh
+# View security statistics
+npm run dev stats
 ```
 
 ---
@@ -201,12 +197,6 @@ npx clawdhub@latest install openclaw-sec
 ```
 
 This automatically installs the skill to `~/.openclaw/skills/openclaw-security/` and sets up hooks for automatic protection.
-
-### NPM Package
-
-```bash
-npm install openclaw-sec
-```
 
 ### From Source
 
