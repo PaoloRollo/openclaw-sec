@@ -10,6 +10,17 @@
 
 ## 🚀 Quick Start
 
+### Install via ClawdHub (Recommended)
+
+```bash
+# One command to install and set up everything
+npx clawdhub@latest install openclaw-sec
+```
+
+That's it! The skill is now installed to `~/.openclaw/skills/openclaw-security/` with hooks enabled for automatic protection.
+
+### Or Install via NPM
+
 ```bash
 # Install
 npm install openclaw-sec
