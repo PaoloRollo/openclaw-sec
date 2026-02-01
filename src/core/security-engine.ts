@@ -84,11 +84,12 @@ export class SecurityEngine {
     this.severityScorer = new SeverityScorer();
     this.actionEngine = new ActionEngine(config, dbManager);
 
-    // Initialize async write queue
+    // Initialize async write queue (skip DB writes if no dbManager)
     this.writeQueue = new AsyncQueue({
       batchSize: 50,
       flushInterval: 100,
       onBatch: async (events: SecurityEvent[]) => {
+        if (!this.dbManager) return; // Skip DB writes in NO_DB mode
         try {
           events.forEach(event => {
             this.dbManager.insertEvent(event);

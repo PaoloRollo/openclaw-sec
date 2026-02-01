@@ -153,6 +153,7 @@ export class ActionEngine {
    * @private
    */
   private async getUserReputation(userId: string) {
+    if (!this.dbManager) return null; // NO_DB mode
     try {
       return this.dbManager.getUserReputation(userId);
     } catch (error) {

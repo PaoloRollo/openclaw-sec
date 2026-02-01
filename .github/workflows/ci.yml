@@ -33,11 +33,12 @@ jobs:
         run: npm run pentest
         env:
           CI: true
+          OPENCLAW_SEC_NO_DB: 1
 
       - name: Upload test results
         if: always()
         run: |
-          npm run pentest:json > pentest-results.json || true
+          OPENCLAW_SEC_NO_DB=1 npm run pentest:json > pentest-results.json || true
           echo "## ZeroLeaks Pen Test Results" >> $GITHUB_STEP_SUMMARY
           echo '```json' >> $GITHUB_STEP_SUMMARY
           cat pentest-results.json | jq '.summary' >> $GITHUB_STEP_SUMMARY
