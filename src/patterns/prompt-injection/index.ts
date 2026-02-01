@@ -7,6 +7,7 @@ import { socialEngineeringPatterns } from './social-engineering';
 import { cotHijackingPatterns } from './cot-hijacking';
 import { policyPuppetryPatterns } from './policy-puppetry';
 import { extractionAttackPatterns } from './extraction-attacks';
+import { encodingObfuscationPatterns } from './encoding-obfuscation';
 
 export const promptInjectionPatternsEN = [
   ...instructionOverridePatterns,
@@ -17,5 +18,6 @@ export const promptInjectionPatternsEN = [
   ...socialEngineeringPatterns,
   ...cotHijackingPatterns,
   ...policyPuppetryPatterns,
-  ...extractionAttackPatterns
+  ...extractionAttackPatterns,
+  ...encodingObfuscationPatterns
 ];
