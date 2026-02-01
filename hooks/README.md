@@ -1,28 +1,42 @@
 # OpenClaw Security Hooks
 
-Automated security validation hooks for Claude Code and other AI agent platforms.
+Automated security validation hooks for OpenClaw's event-driven hook system.
 
 ## Overview
 
 OpenClaw Security Hooks provide **automatic, real-time protection** for AI agent interactions by intercepting and validating:
 
-- **User Input** (before submission to the agent)
-- **Tool Calls** (before execution)
+- **User Input** (before submission to the agent) - via `command:new` event
+- **Tool Calls** (before execution) - via `tool_result_persist` plugin API
+
+## Hook System Architecture
+
+Each hook follows OpenClaw's hook system specification:
+
+```
+hook-name/
+├── HOOK.md          # Metadata with YAML frontmatter
+└── handler.ts       # Handler implementation
+```
+
+**Installation Path:** `~/.openclaw/hooks/`
 
 ## Available Hooks
 
-### 1. User Prompt Submit Hook
+### 1. Security Input Validator
 
-**File:** `user-prompt-submit-hook.ts`
+**Directory:** `security-input-validator/`
 
-**Purpose:** Validates user input before it's submitted to the AI agent.
+**Event:** `command:new`
+
+**Purpose:** Validates user prompts before submission to AI agents.
 
 **Detects:**
 - Prompt injection attempts
 - Command injection patterns
-- Malicious URLs
+- Malicious URLs and SSRF attacks
 - Path traversal attempts
-- Exposed secrets
+- Secret exposure
 - Obfuscation techniques
 
 **Actions:**
@@ -30,11 +44,15 @@ OpenClaw Security Hooks provide **automatic, real-time protection** for AI agent
 - ⚠️  **WARN** - Potential issues, allow but log
 - 🚫 **BLOCK** - Security threat detected, reject input
 
-### 2. Tool Call Hook
+### 2. Security Tool Validator
 
-**File:** `tool-call-hook.ts`
+**Directory:** `security-tool-validator/`
 
-**Purpose:** Validates tool/function call parameters before execution.
+**Event:** `agent:bootstrap`
+
+**Plugin API:** `tool_result_persist`
+
+**Purpose:** Validates tool call parameters before execution.
 
 **Validates:**
 - Shell command parameters (Bash, exec)
@@ -49,7 +67,7 @@ OpenClaw Security Hooks provide **automatic, real-time protection** for AI agent
 
 ## Installation
 
-### Automatic Installation
+### Automatic Installation (Recommended)
 
 Run the installation script:
 
@@ -59,33 +77,45 @@ cd hooks/
 ```
 
 This will:
-1. Create `~/.claude-code/hooks/` directory
-2. Copy hook files to the hooks directory
-3. Make hooks executable
-4. Create symlinks to the OpenClaw codebase
+1. Create `~/.openclaw/hooks/` directory
+2. Copy hook directories to the hooks directory
+3. Create symlinks to the OpenClaw Security codebase
+4. Enable hooks via `openclaw` CLI (if available)
 
 ### Manual Installation
 
 1. **Create hooks directory:**
    ```bash
-   mkdir -p ~/.claude-code/hooks
+   mkdir -p ~/.openclaw/hooks
    ```
 
-2. **Copy hook files:**
+2. **Copy hook directories:**
    ```bash
-   cp user-prompt-submit-hook.ts ~/.claude-code/hooks/
-   cp tool-call-hook.ts ~/.claude-code/hooks/
+   cp -r security-input-validator ~/.openclaw/hooks/
+   cp -r security-tool-validator ~/.openclaw/hooks/
    ```
 
-3. **Make executable:**
+3. **Create symlink to OpenClaw Security:**
    ```bash
-   chmod +x ~/.claude-code/hooks/*.ts
+   ln -s /path/to/openclaw-sec ~/.openclaw/openclaw-sec
    ```
 
-4. **Create symlink to OpenClaw:**
+4. **Enable hooks:**
    ```bash
-   ln -s /path/to/openclaw-sec ~/.claude-code/hooks/openclaw-sec
+   openclaw hooks enable security-input-validator
+   openclaw hooks enable security-tool-validator
    ```
+
+### Verify Installation
+
+```bash
+# List installed hooks
+openclaw hooks list
+
+# Check hook status
+openclaw hooks status security-input-validator
+openclaw hooks status security-tool-validator
+```
 
 ## Configuration
 
@@ -93,13 +123,13 @@ Hooks use the same configuration as the OpenClaw Security Suite.
 
 ### Config File Locations (in priority order):
 
-1. `./openclaw-security.yaml` (current directory)
-2. `~/.openclaw/security-config.yaml` (home directory)
+1. `./.openclaw-security.yaml` (current directory)
+2. `~/.openclaw/security-config.yaml` (user home directory)
 3. Default configuration (if no file found)
 
 ### Example Configuration
 
-Create `.openclaw-security.yaml`:
+Create `~/.openclaw/security-config.yaml` or `.openclaw-security.yaml`:
 
 ```yaml
 openclaw_security:
@@ -140,48 +170,43 @@ openclaw_security:
 
 ## Testing Hooks
 
-### Test User Prompt Hook
+Hooks are tested automatically by OpenClaw when events are triggered. You can also test them manually:
+
+### Test with OpenClaw CLI
 
 ```bash
-echo '{"userPrompt":"rm -rf /","userId":"test-user","sessionId":"test-123"}' | \
-  node ~/.claude-code/hooks/user-prompt-submit-hook.ts
+# Test security-input-validator
+openclaw hooks test security-input-validator --event command:new --data '{"input":"rm -rf /"}'
+
+# Test security-tool-validator
+openclaw hooks test security-tool-validator --event agent:bootstrap
 ```
 
-Expected output for malicious input:
-```json
-{
-  "allow": false,
-  "severity": "HIGH",
-  "message": "🚫 Security Warning: This input has been blocked...",
-  "findings": [...]
-}
-```
-
-### Test Tool Call Hook
+### Monitor Hook Activity
 
 ```bash
-echo '{
-  "toolName": "bash",
-  "parameters": [
-    {"name": "command", "value": "ls -la"}
-  ],
-  "userId": "test-user",
-  "sessionId": "test-123"
-}' | node ~/.claude-code/hooks/tool-call-hook.ts
+# View hook logs
+openclaw hooks logs security-input-validator
+
+# View security events generated by hooks
+openclaw-sec events --context hookType:security-input-validator
+openclaw-sec events --context hookType:security-tool-validator
 ```
 
 ## Hook Behavior
 
-### User Prompt Submit Hook
+### Security Input Validator (command:new)
 
 ```
 ┌─────────────────┐
 │   User Input    │
+│  (command:new)  │
 └────────┬────────┘
          │
          ▼
 ┌─────────────────┐
 │  Security Scan  │ ← All 6 modules run in parallel
+│ (SecurityEngine)│
 └────────┬────────┘
          │
          ▼
@@ -195,10 +220,10 @@ echo '{
     │       │          │        │
     ▼       ▼          ▼        ▼
  Submit  Submit +   Reject    Reject +
-         Warning   + Message  Notify
+         Warning   + Error    Error
 ```
 
-### Tool Call Hook
+### Security Tool Validator (tool_result_persist)
 
 ```
 ┌─────────────────┐
@@ -209,7 +234,7 @@ echo '{
          ▼
 ┌─────────────────┐
 │ Extract & Scan  │ ← Validate relevant parameters
-│   Parameters    │
+│   Parameters    │   (SecurityEngine per param)
 └────────┬────────┘
          │
          ▼
@@ -223,7 +248,7 @@ echo '{
     │       │      │
     ▼       ▼      ▼
  Execute  Execute Reject
-         + Log   + Message
+         + Log   + Error
 ```
 
 ## Performance
@@ -252,42 +277,59 @@ openclaw-sec events --severity HIGH
 
 ### Hooks not running?
 
-1. Check hooks directory:
+1. **Check hooks are installed:**
    ```bash
-   ls -la ~/.claude-code/hooks/
+   openclaw hooks list
    ```
 
-2. Verify hooks are executable:
+2. **Check hooks are enabled:**
    ```bash
-   chmod +x ~/.claude-code/hooks/*.ts
+   openclaw hooks status security-input-validator
+   openclaw hooks status security-tool-validator
    ```
 
-3. Check symlink:
+3. **Check hooks directory:**
    ```bash
-   ls -la ~/.claude-code/hooks/openclaw-sec
+   ls -la ~/.openclaw/hooks/
+   ```
+
+4. **Verify symlink exists:**
+   ```bash
+   ls -la ~/.openclaw/openclaw-sec
    ```
 
 ### Hooks failing silently?
 
 Hooks fail-open by default (allow on error) to prevent breaking the workflow.
 
-Check logs:
+**Check logs:**
 ```bash
+# View hook execution logs
+openclaw hooks logs security-input-validator
+openclaw hooks logs security-tool-validator
+
+# View security event logs
 tail -f ~/.openclaw/logs/security-events.log
 ```
 
 ### Disable hooks temporarily
 
-Rename the hook files:
 ```bash
-cd ~/.claude-code/hooks/
-mv user-prompt-submit-hook.ts user-prompt-submit-hook.ts.disabled
+# Disable specific hook
+openclaw hooks disable security-input-validator
+openclaw hooks disable security-tool-validator
+
+# Or disable in config
+# Edit ~/.openclaw/security-config.yaml:
+# openclaw_security:
+#   enabled: false
 ```
 
-Or disable in config:
-```yaml
-openclaw_security:
-  enabled: false
+### Re-enable hooks
+
+```bash
+openclaw hooks enable security-input-validator
+openclaw hooks enable security-tool-validator
 ```
 
 ## Advanced Configuration
@@ -329,32 +371,74 @@ actions:
   CRITICAL: block   # Block without notification
 ```
 
-## Integration Examples
+## Hook Event Details
 
-### GitHub Actions
+### security-input-validator
 
-```yaml
-- name: Install OpenClaw Security
-  run: |
-    npm install -g openclaw-sec
-    cd ~/.claude-code/hooks/
-    openclaw-sec install-hooks
+**Event:** `command:new`
+
+**Triggers when:**
+- User submits a new prompt/command to the agent
+- New conversation starts
+- User sends follow-up messages
+
+**Event data structure:**
+```typescript
+{
+  type: "command",
+  action: "new",
+  data: {
+    input: string,      // User's prompt
+    userId?: string,
+    sessionId?: string
+  }
+}
 ```
 
-### Docker
+### security-tool-validator
 
-```dockerfile
-FROM node:18
-RUN npm install -g openclaw-sec
-RUN mkdir -p /root/.claude-code/hooks
-RUN openclaw-sec install-hooks
-```
+**Event:** `agent:bootstrap`
 
-### CI/CD Pipeline
+**Registers plugin:** `tool_result_persist`
+
+**Triggers when:**
+- Agent starts up and bootstraps hooks
+- Registers a plugin that intercepts all tool calls
+
+**Plugin intercepts:**
+- All tool/function calls before execution
+- Validates parameters for security-sensitive tools
+- Blocks or allows based on validation results
+
+## Integration with OpenClaw
+
+### Install as Dependency
+
+Add to your OpenClaw project:
 
 ```bash
-# Pre-commit validation
-git diff --staged | openclaw-sec scan-content --stdin
+npm install openclaw-sec
+```
+
+### Programmatic Hook Registration
+
+```typescript
+import { SecurityEngine } from 'openclaw-sec';
+
+// Hooks are automatically loaded from ~/.openclaw/hooks/
+// when enabled via: openclaw hooks enable <hook-name>
+```
+
+### CI/CD Integration
+
+```bash
+# Install hooks in CI environment
+cd your-project
+npm install openclaw-sec
+./node_modules/.bin/openclaw-sec hooks install
+
+# Run with hooks enabled
+openclaw agent run --hooks-enabled
 ```
 
 ## Support
