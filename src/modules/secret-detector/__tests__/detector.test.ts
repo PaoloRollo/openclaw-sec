@@ -157,7 +157,7 @@ describe('SecretDetector', () => {
     describe('Slack tokens', () => {
       it('should detect Slack bot token (xoxb)', async () => {
         const detector = new SecretDetector(defaultConfig);
-        const text = 'xoxb-1234567890123-1234567890123-xxxxxxxxxxxxxxxxxxxxxxxx';
+        const text = 'xoxb-1111111111111-2222222222222-FAKE1EXAMPLE2TESTING3456';
 
         const findings = await detector.scan(text);
 
@@ -178,7 +178,7 @@ describe('SecretDetector', () => {
 
       it('should detect Slack webhook URL', async () => {
         const detector = new SecretDetector(defaultConfig);
-        const text = 'https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX';
+        const text = 'https://hooks.slack.com/services/TFAKETEST1/BFAKETEST2/FAKE3EXAMPLE4TESTING56789';
 
         const findings = await detector.scan(text);
 

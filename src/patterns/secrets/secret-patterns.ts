@@ -152,11 +152,11 @@ export const secretPatterns: SecurityPattern[] = [
     language: 'all',
     description: 'Slack token',
     examples: [
-      'xoxb-1234567890123-1234567890123-xxxxxxxxxxxxxxxxxxxxxxxx',
-      'xoxa-1234567890123-1234567890123-xxxxxxxxxxxxxxxxxxxxxxxx',
-      'xoxp-1234567890123-1234567890123-xxxxxxxxxxxxxxxxxxxxxxxx',
-      'xoxr-1234567890123-1234567890123-xxxxxxxxxxxxxxxxxxxxxxxx',
-      'xoxs-1234567890123-1234567890123-xxxxxxxxxxxxxxxxxxxxxxxx'
+      'xoxb-1111111111111-2222222222222-FAKE1EXAMPLE2TESTING3456',
+      'xoxa-1111111111111-2222222222222-FAKE1EXAMPLE2TESTING3456',
+      'xoxp-1111111111111-2222222222222-FAKE1EXAMPLE2TESTING3456',
+      'xoxr-1111111111111-2222222222222-FAKE1EXAMPLE2TESTING3456',
+      'xoxs-1111111111111-2222222222222-FAKE1EXAMPLE2TESTING3456'
     ],
     falsePositiveRisk: 'low',
     enabled: true,
@@ -171,7 +171,7 @@ export const secretPatterns: SecurityPattern[] = [
     language: 'all',
     description: 'Slack webhook URL',
     examples: [
-      'https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX'
+      'https://hooks.slack.com/services/TFAKETEST1/BFAKETEST2/FAKE3EXAMPLE4TESTING56789'
     ],
     falsePositiveRisk: 'low',
     enabled: true,
@@ -186,10 +186,10 @@ export const secretPatterns: SecurityPattern[] = [
     language: 'all',
     description: 'Stripe API key',
     examples: [
-      'sk_live_xxxxxxxxxxxxxxxxxxxxxxxx',
-      'pk_live_xxxxxxxxxxxxxxxxxxxxxxxx',
-      'sk_test_xxxxxxxxxxxxxxxxxxxxxxxx',
-      'pk_test_xxxxxxxxxxxxxxxxxxxxxxxx'
+      'sk_live_FAKE1EXAMPLE2TESTING345',
+      'pk_live_FAKE1EXAMPLE2TESTING345',
+      'sk_test_FAKE1EXAMPLE2TESTING345',
+      'pk_test_FAKE1EXAMPLE2TESTING345'
     ],
     falsePositiveRisk: 'low',
     enabled: true,
