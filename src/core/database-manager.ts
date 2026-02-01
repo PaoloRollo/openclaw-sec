@@ -17,45 +17,44 @@ export interface SecurityEvent {
 }
 
 export interface RateLimit {
-  id?: number;
   user_id: string;
-  window_start: string;
   request_count: number;
-  blocked: number;
-  last_updated?: string;
+  window_start: string;
+  lockout_until?: string;
+  failed_attempts: number;
 }
 
 export interface UserReputation {
-  id?: number;
   user_id: string;
-  reputation_score: number;
-  total_events: number;
-  blocked_events: number;
-  safe_events: number;
-  first_seen?: string;
-  last_seen?: string;
+  trust_score: number;
+  total_requests: number;
+  blocked_attempts: number;
+  last_violation?: string;
+  is_allowlisted: number;
+  is_blocklisted: number;
+  notes?: string;
 }
 
 export interface AttackPattern {
   id?: number;
-  pattern_hash: string;
-  pattern_text: string;
+  pattern: string;
   category: string;
   severity: Severity;
-  first_seen?: string;
-  last_seen?: string;
-  occurrence_count: number;
-  success_rate: number;
+  language: string;
+  times_matched: number;
+  last_matched?: string;
+  is_custom: number;
+  enabled: number;
 }
 
 export interface NotificationLog {
   id?: number;
   timestamp?: string;
-  event_id: number;
   channel: string;
-  status: string;
-  response_code?: number;
-  error_message?: string;
+  severity: Severity;
+  message: string;
+  delivery_status: string;
+  event_id: number;
 }
 
 export class DatabaseManager {
@@ -96,59 +95,56 @@ export class DatabaseManager {
     // Rate Limits Table
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS rate_limits (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id TEXT NOT NULL UNIQUE,
-        window_start DATETIME NOT NULL,
+        user_id TEXT PRIMARY KEY,
         request_count INTEGER DEFAULT 0,
-        blocked INTEGER DEFAULT 0,
-        last_updated DATETIME DEFAULT CURRENT_TIMESTAMP
+        window_start DATETIME NOT NULL,
+        lockout_until DATETIME,
+        failed_attempts INTEGER DEFAULT 0
       );
     `);
 
     // Create indexes for rate_limits
     this.db.exec(`
-      CREATE INDEX IF NOT EXISTS idx_rate_limits_user_id ON rate_limits(user_id);
       CREATE INDEX IF NOT EXISTS idx_rate_limits_window_start ON rate_limits(window_start);
     `);
 
     // User Reputation Table
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS user_reputation (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id TEXT NOT NULL UNIQUE,
-        reputation_score REAL DEFAULT 100.0,
-        total_events INTEGER DEFAULT 0,
-        blocked_events INTEGER DEFAULT 0,
-        safe_events INTEGER DEFAULT 0,
-        first_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
-        last_seen DATETIME DEFAULT CURRENT_TIMESTAMP
+        user_id TEXT PRIMARY KEY,
+        trust_score REAL DEFAULT 100.0,
+        total_requests INTEGER DEFAULT 0,
+        blocked_attempts INTEGER DEFAULT 0,
+        last_violation DATETIME,
+        is_allowlisted INTEGER DEFAULT 0,
+        is_blocklisted INTEGER DEFAULT 0,
+        notes TEXT
       );
     `);
 
     // Create indexes for user_reputation
     this.db.exec(`
-      CREATE INDEX IF NOT EXISTS idx_reputation_user_id ON user_reputation(user_id);
-      CREATE INDEX IF NOT EXISTS idx_reputation_score ON user_reputation(reputation_score);
+      CREATE INDEX IF NOT EXISTS idx_reputation_trust_score ON user_reputation(trust_score);
     `);
 
     // Attack Patterns Table
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS attack_patterns (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        pattern_hash TEXT NOT NULL UNIQUE,
-        pattern_text TEXT NOT NULL,
+        pattern TEXT NOT NULL UNIQUE,
         category TEXT NOT NULL,
         severity TEXT NOT NULL,
-        first_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
-        last_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
-        occurrence_count INTEGER DEFAULT 1,
-        success_rate REAL DEFAULT 0.0
+        language TEXT NOT NULL,
+        times_matched INTEGER DEFAULT 0,
+        last_matched DATETIME,
+        is_custom INTEGER DEFAULT 0,
+        enabled INTEGER DEFAULT 1
       );
     `);
 
     // Create indexes for attack_patterns
     this.db.exec(`
-      CREATE INDEX IF NOT EXISTS idx_patterns_hash ON attack_patterns(pattern_hash);
+      CREATE INDEX IF NOT EXISTS idx_patterns_pattern ON attack_patterns(pattern);
       CREATE INDEX IF NOT EXISTS idx_patterns_category ON attack_patterns(category);
       CREATE INDEX IF NOT EXISTS idx_patterns_severity ON attack_patterns(severity);
     `);
@@ -158,11 +154,11 @@ export class DatabaseManager {
       CREATE TABLE IF NOT EXISTS notifications_log (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        event_id INTEGER NOT NULL,
         channel TEXT NOT NULL,
-        status TEXT NOT NULL,
-        response_code INTEGER,
-        error_message TEXT,
+        severity TEXT NOT NULL,
+        message TEXT NOT NULL,
+        delivery_status TEXT NOT NULL,
+        event_id INTEGER NOT NULL,
         FOREIGN KEY (event_id) REFERENCES security_events(id)
       );
     `);
@@ -171,7 +167,7 @@ export class DatabaseManager {
     this.db.exec(`
       CREATE INDEX IF NOT EXISTS idx_notifications_event_id ON notifications_log(event_id);
       CREATE INDEX IF NOT EXISTS idx_notifications_timestamp ON notifications_log(timestamp);
-      CREATE INDEX IF NOT EXISTS idx_notifications_status ON notifications_log(status);
+      CREATE INDEX IF NOT EXISTS idx_notifications_delivery_status ON notifications_log(delivery_status);
     `);
   }
 
@@ -236,25 +232,24 @@ export class DatabaseManager {
   }
 
   // Rate Limits Methods
-  public upsertRateLimit(rateLimit: RateLimit): number {
+  public upsertRateLimit(rateLimit: RateLimit): void {
     const stmt = this.db.prepare(`
-      INSERT INTO rate_limits (user_id, window_start, request_count, blocked)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO rate_limits (user_id, request_count, window_start, lockout_until, failed_attempts)
+      VALUES (?, ?, ?, ?, ?)
       ON CONFLICT(user_id) DO UPDATE SET
-        window_start = excluded.window_start,
         request_count = excluded.request_count,
-        blocked = excluded.blocked,
-        last_updated = CURRENT_TIMESTAMP
+        window_start = excluded.window_start,
+        lockout_until = excluded.lockout_until,
+        failed_attempts = excluded.failed_attempts
     `);
 
-    const result = stmt.run(
+    stmt.run(
       rateLimit.user_id,
-      rateLimit.window_start,
       rateLimit.request_count,
-      rateLimit.blocked
+      rateLimit.window_start,
+      rateLimit.lockout_until,
+      rateLimit.failed_attempts
     );
-
-    return result.lastInsertRowid as number;
   }
 
   public getRateLimitByUserId(userId: string): RateLimit | undefined {
@@ -263,29 +258,32 @@ export class DatabaseManager {
   }
 
   // User Reputation Methods
-  public upsertUserReputation(reputation: UserReputation): number {
+  public upsertUserReputation(reputation: UserReputation): void {
     const stmt = this.db.prepare(`
       INSERT INTO user_reputation (
-        user_id, reputation_score, total_events, blocked_events, safe_events
+        user_id, trust_score, total_requests, blocked_attempts, last_violation, is_allowlisted, is_blocklisted, notes
       )
-      VALUES (?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(user_id) DO UPDATE SET
-        reputation_score = excluded.reputation_score,
-        total_events = excluded.total_events,
-        blocked_events = excluded.blocked_events,
-        safe_events = excluded.safe_events,
-        last_seen = CURRENT_TIMESTAMP
+        trust_score = excluded.trust_score,
+        total_requests = excluded.total_requests,
+        blocked_attempts = excluded.blocked_attempts,
+        last_violation = excluded.last_violation,
+        is_allowlisted = excluded.is_allowlisted,
+        is_blocklisted = excluded.is_blocklisted,
+        notes = excluded.notes
     `);
 
-    const result = stmt.run(
+    stmt.run(
       reputation.user_id,
-      reputation.reputation_score,
-      reputation.total_events,
-      reputation.blocked_events,
-      reputation.safe_events
+      reputation.trust_score,
+      reputation.total_requests,
+      reputation.blocked_attempts,
+      reputation.last_violation,
+      reputation.is_allowlisted,
+      reputation.is_blocklisted,
+      reputation.notes
     );
-
-    return result.lastInsertRowid as number;
   }
 
   public getUserReputation(userId: string): UserReputation | undefined {
@@ -297,37 +295,43 @@ export class DatabaseManager {
   public upsertAttackPattern(pattern: AttackPattern): number {
     const stmt = this.db.prepare(`
       INSERT INTO attack_patterns (
-        pattern_hash, pattern_text, category, severity, occurrence_count, success_rate
+        pattern, category, severity, language, times_matched, last_matched, is_custom, enabled
       )
-      VALUES (?, ?, ?, ?, ?, ?)
-      ON CONFLICT(pattern_hash) DO UPDATE SET
-        last_seen = CURRENT_TIMESTAMP,
-        occurrence_count = occurrence_count + 1,
-        success_rate = excluded.success_rate
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(pattern) DO UPDATE SET
+        category = excluded.category,
+        severity = excluded.severity,
+        language = excluded.language,
+        times_matched = excluded.times_matched,
+        last_matched = excluded.last_matched,
+        is_custom = excluded.is_custom,
+        enabled = excluded.enabled
     `);
 
     const result = stmt.run(
-      pattern.pattern_hash,
-      pattern.pattern_text,
+      pattern.pattern,
       pattern.category,
       pattern.severity,
-      pattern.occurrence_count,
-      pattern.success_rate
+      pattern.language,
+      pattern.times_matched,
+      pattern.last_matched,
+      pattern.is_custom,
+      pattern.enabled
     );
 
     return result.lastInsertRowid as number;
   }
 
-  public getAttackPatternByHash(hash: string): AttackPattern | undefined {
-    const stmt = this.db.prepare('SELECT * FROM attack_patterns WHERE pattern_hash = ?');
-    return stmt.get(hash) as AttackPattern | undefined;
+  public getAttackPatternByPattern(pattern: string): AttackPattern | undefined {
+    const stmt = this.db.prepare('SELECT * FROM attack_patterns WHERE pattern = ?');
+    return stmt.get(pattern) as AttackPattern | undefined;
   }
 
   public getAttackPatternsByCategory(category: string, limit: number = 100): AttackPattern[] {
     const stmt = this.db.prepare(`
       SELECT * FROM attack_patterns
       WHERE category = ?
-      ORDER BY occurrence_count DESC
+      ORDER BY times_matched DESC
       LIMIT ?
     `);
     return stmt.all(category, limit) as AttackPattern[];
@@ -337,16 +341,16 @@ export class DatabaseManager {
   public insertNotificationLog(log: NotificationLog): number {
     const stmt = this.db.prepare(`
       INSERT INTO notifications_log (
-        event_id, channel, status, response_code, error_message
+        channel, severity, message, delivery_status, event_id
       ) VALUES (?, ?, ?, ?, ?)
     `);
 
     const result = stmt.run(
-      log.event_id,
       log.channel,
-      log.status,
-      log.response_code,
-      log.error_message
+      log.severity,
+      log.message,
+      log.delivery_status,
+      log.event_id
     );
 
     return result.lastInsertRowid as number;

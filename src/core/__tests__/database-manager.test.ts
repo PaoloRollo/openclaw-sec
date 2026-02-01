@@ -93,91 +93,103 @@ describe('DatabaseManager', () => {
   test('upserts and retrieves rate limit', () => {
     const rateLimit = {
       user_id: 'user123',
-      window_start: new Date().toISOString(),
       request_count: 5,
-      blocked: 0
+      window_start: new Date().toISOString(),
+      lockout_until: undefined,
+      failed_attempts: 0
     };
 
-    const id = db.upsertRateLimit(rateLimit);
-    expect(id).toBeGreaterThan(0);
+    db.upsertRateLimit(rateLimit);
 
     const retrieved = db.getRateLimitByUserId('user123');
     expect(retrieved).toBeDefined();
     expect(retrieved?.request_count).toBe(5);
+    expect(retrieved?.failed_attempts).toBe(0);
 
     // Test update
     const updated = {
       user_id: 'user123',
-      window_start: new Date().toISOString(),
       request_count: 10,
-      blocked: 1
+      window_start: new Date().toISOString(),
+      lockout_until: new Date().toISOString(),
+      failed_attempts: 3
     };
 
     db.upsertRateLimit(updated);
     const retrievedUpdated = db.getRateLimitByUserId('user123');
     expect(retrievedUpdated?.request_count).toBe(10);
-    expect(retrievedUpdated?.blocked).toBe(1);
+    expect(retrievedUpdated?.failed_attempts).toBe(3);
   });
 
   test('upserts and retrieves user reputation', () => {
     const reputation = {
       user_id: 'user123',
-      reputation_score: 85.5,
-      total_events: 10,
-      blocked_events: 2,
-      safe_events: 8
+      trust_score: 85.5,
+      total_requests: 10,
+      blocked_attempts: 2,
+      last_violation: undefined,
+      is_allowlisted: 0,
+      is_blocklisted: 0,
+      notes: undefined
     };
 
-    const id = db.upsertUserReputation(reputation);
-    expect(id).toBeGreaterThan(0);
+    db.upsertUserReputation(reputation);
 
     const retrieved = db.getUserReputation('user123');
     expect(retrieved).toBeDefined();
-    expect(retrieved?.reputation_score).toBe(85.5);
-    expect(retrieved?.total_events).toBe(10);
+    expect(retrieved?.trust_score).toBe(85.5);
+    expect(retrieved?.total_requests).toBe(10);
+    expect(retrieved?.blocked_attempts).toBe(2);
   });
 
   test('upserts and retrieves attack patterns', () => {
     const pattern = {
-      pattern_hash: 'hash123',
-      pattern_text: 'ignore previous instructions',
+      pattern: 'ignore previous instructions',
       category: 'prompt_injection',
       severity: Severity.HIGH,
-      occurrence_count: 1,
-      success_rate: 0.5
+      language: 'en',
+      times_matched: 1,
+      last_matched: new Date().toISOString(),
+      is_custom: 0,
+      enabled: 1
     };
 
     const id = db.upsertAttackPattern(pattern);
     expect(id).toBeGreaterThan(0);
 
-    const retrieved = db.getAttackPatternByHash('hash123');
+    const retrieved = db.getAttackPatternByPattern('ignore previous instructions');
     expect(retrieved).toBeDefined();
-    expect(retrieved?.pattern_text).toBe('ignore previous instructions');
-    expect(retrieved?.occurrence_count).toBe(1);
+    expect(retrieved?.pattern).toBe('ignore previous instructions');
+    expect(retrieved?.times_matched).toBe(1);
+    expect(retrieved?.language).toBe('en');
 
-    // Test update increments occurrence_count
-    db.upsertAttackPattern({ ...pattern, success_rate: 0.7 });
-    const updated = db.getAttackPatternByHash('hash123');
-    expect(updated?.occurrence_count).toBe(2);
+    // Test update
+    db.upsertAttackPattern({ ...pattern, times_matched: 5 });
+    const updated = db.getAttackPatternByPattern('ignore previous instructions');
+    expect(updated?.times_matched).toBe(5);
   });
 
   test('retrieves attack patterns by category', () => {
     const pattern1 = {
-      pattern_hash: 'hash1',
-      pattern_text: 'pattern 1',
+      pattern: 'pattern 1',
       category: 'prompt_injection',
       severity: Severity.HIGH,
-      occurrence_count: 5,
-      success_rate: 0.5
+      language: 'en',
+      times_matched: 5,
+      last_matched: new Date().toISOString(),
+      is_custom: 0,
+      enabled: 1
     };
 
     const pattern2 = {
-      pattern_hash: 'hash2',
-      pattern_text: 'pattern 2',
+      pattern: 'pattern 2',
       category: 'prompt_injection',
       severity: Severity.MEDIUM,
-      occurrence_count: 3,
-      success_rate: 0.3
+      language: 'en',
+      times_matched: 3,
+      last_matched: new Date().toISOString(),
+      is_custom: 0,
+      enabled: 1
     };
 
     db.upsertAttackPattern(pattern1);
@@ -185,7 +197,7 @@ describe('DatabaseManager', () => {
 
     const patterns = db.getAttackPatternsByCategory('prompt_injection');
     expect(patterns).toHaveLength(2);
-    expect(patterns[0].occurrence_count).toBe(5); // Sorted by occurrence_count DESC
+    expect(patterns[0].times_matched).toBe(5); // Sorted by times_matched DESC
   });
 
   test('inserts and retrieves notification logs', () => {
@@ -205,11 +217,11 @@ describe('DatabaseManager', () => {
     const eventId = db.insertEvent(event);
 
     const notificationLog = {
-      event_id: eventId,
       channel: 'slack',
-      status: 'success',
-      response_code: 200,
-      error_message: undefined
+      severity: Severity.HIGH,
+      message: 'High severity attack detected',
+      delivery_status: 'success',
+      event_id: eventId
     };
 
     const logId = db.insertNotificationLog(notificationLog);
@@ -218,7 +230,9 @@ describe('DatabaseManager', () => {
     const logs = db.getNotificationLogsByEventId(eventId);
     expect(logs).toHaveLength(1);
     expect(logs[0].channel).toBe('slack');
-    expect(logs[0].status).toBe('success');
+    expect(logs[0].delivery_status).toBe('success');
+    expect(logs[0].severity).toBe(Severity.HIGH);
+    expect(logs[0].message).toBe('High severity attack detected');
   });
 
   test('deletes old events', () => {
