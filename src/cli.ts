@@ -1,8 +1,14 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import chalk from 'chalk';
 import { SecurityEngine, ValidationMetadata } from './core/security-engine';
+
+// Simple passthrough for chalk (no colors needed)
+const identity = (s: any) => s;
+const chalk: any = new Proxy(identity, {
+  get: () => chalk,
+  apply: (_t, _this, args) => args[0]
+});
 import { ConfigManager } from './core/config-manager';
 import { DatabaseManager, SecurityEvent } from './core/database-manager';
 import { Severity, Action } from './types';
@@ -23,6 +29,7 @@ let dbManager: DatabaseManager | null = null;
 
 /**
  * Initialize the security engine and database manager
+ * Set OPENCLAW_SEC_NO_DB=1 to skip database initialization (for CI/testing)
  */
 async function initializeEngine(): Promise<SecurityEngine> {
   if (engine) {
@@ -41,7 +48,9 @@ async function initializeEngine(): Promise<SecurityEngine> {
     for (const configPath of configPaths) {
       if (fs.existsSync(configPath)) {
         config = await ConfigManager.load(configPath);
-        console.log(chalk.gray(`Loaded config from: ${configPath}`));
+        if (!process.env.OPENCLAW_SEC_NO_DB) {
+          console.log(chalk.gray(`Loaded config from: ${configPath}`));
+        }
         break;
       }
     }
@@ -49,15 +58,19 @@ async function initializeEngine(): Promise<SecurityEngine> {
     // Use default config if no file found
     if (!config) {
       config = ConfigManager.getDefaultConfig();
-      console.log(chalk.gray('Using default configuration'));
+      if (!process.env.OPENCLAW_SEC_NO_DB) {
+        console.log(chalk.gray('Using default configuration'));
+      }
     }
 
-    // Initialize database
-    const dbPath = config.database.path || '.openclaw-sec.db';
-    dbManager = new DatabaseManager(dbPath);
+    // Initialize database (skip if NO_DB mode for CI/testing)
+    if (!process.env.OPENCLAW_SEC_NO_DB) {
+      const dbPath = config.database.path || '.openclaw-sec.db';
+      dbManager = new DatabaseManager(dbPath);
+    }
 
-    // Initialize engine
-    engine = new SecurityEngine(config, dbManager);
+    // Initialize engine (null dbManager is handled gracefully)
+    engine = new SecurityEngine(config, dbManager!);
 
     return engine;
   } catch (error) {

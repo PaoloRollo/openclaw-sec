@@ -59,17 +59,13 @@ export class ActionEngine {
    * @param dbManager - Database manager for reputation lookups
    * @throws Error if config or dbManager is missing
    */
-  constructor(config: SecurityConfig, dbManager: DatabaseManager) {
+  constructor(config: SecurityConfig, dbManager?: DatabaseManager | null) {
     if (!config) {
       throw new Error('Configuration is required');
     }
 
-    if (!dbManager) {
-      throw new Error('Database manager is required');
-    }
-
     this.config = config;
-    this.dbManager = dbManager;
+    this.dbManager = dbManager!;
   }
 
   /**
@@ -153,6 +149,7 @@ export class ActionEngine {
    * @private
    */
   private async getUserReputation(userId: string) {
+    if (!this.dbManager) return null; // NO_DB mode
     try {
       return this.dbManager.getUserReputation(userId);
     } catch (error) {

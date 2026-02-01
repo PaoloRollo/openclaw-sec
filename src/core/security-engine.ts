@@ -70,25 +70,22 @@ export class SecurityEngine {
    * @param dbManager - Database manager
    * @throws Error if config or dbManager is missing
    */
-  constructor(config: SecurityConfig, dbManager: DatabaseManager) {
+  constructor(config: SecurityConfig, dbManager?: DatabaseManager | null) {
     if (!config) {
       throw new Error('Configuration is required');
     }
 
-    if (!dbManager) {
-      throw new Error('Database manager is required');
-    }
-
     this.config = config;
-    this.dbManager = dbManager;
+    this.dbManager = dbManager!;
     this.severityScorer = new SeverityScorer();
     this.actionEngine = new ActionEngine(config, dbManager);
 
-    // Initialize async write queue
+    // Initialize async write queue (skip DB writes if no dbManager)
     this.writeQueue = new AsyncQueue({
       batchSize: 50,
       flushInterval: 100,
       onBatch: async (events: SecurityEvent[]) => {
+        if (!this.dbManager) return; // Skip DB writes in NO_DB mode
         try {
           events.forEach(event => {
             this.dbManager.insertEvent(event);
