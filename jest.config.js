@@ -10,6 +10,11 @@ module.exports = {
   },
   testPathIgnorePatterns: [
     "/node_modules/",
+    "/dist/",
     "\\.d\\.ts$"
+  ],
+  testMatch: [
+    "**/__tests__/**/*.test.ts",
+    "**/*.test.ts"
   ],
 };

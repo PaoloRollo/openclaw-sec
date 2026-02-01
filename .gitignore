@@ -6,3 +6,4 @@ dist/
 *.db-journal
 config.yaml
 docs/
+benchmark-results-*.json
