@@ -72,14 +72,14 @@ OpenClaw Security Suite provides **real-time, multi-layered security validation*
 
 ### Key Features
 
-✅ **6 Parallel Detection Modules** - Comprehensive threat coverage
-⚡ **Sub-50ms Validation** - Real-time performance with async writes
-🎯 **Smart Severity Scoring** - Context-aware risk assessment
-🔧 **Automated Actions** - Block, warn, or log based on severity
-📊 **Analytics & Reputation** - Track patterns and user behavior
-🪝 **Auto-Hooks** - Transparent protection via hooks
-🔍 **670+ Tests** - Comprehensive test coverage
-📝 **Type-Safe** - Full TypeScript support
+- ✅ **6 Parallel Detection Modules** - Comprehensive threat coverage
+- ⚡ **Sub-50ms Validation** - Real-time performance with async writes
+- 🎯 **Smart Severity Scoring** - Context-aware risk assessment
+- 🔧 **Automated Actions** - Block, warn, or log based on severity
+- 📊 **Analytics & Reputation** - Track patterns and user behavior
+- 🪝 **Auto-Hooks** - Transparent protection via hooks
+- 🔍 **670+ Tests** - Comprehensive test coverage
+- 📝 **Type-Safe** - Full TypeScript support
 
 ---
 
