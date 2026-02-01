@@ -177,4 +177,6 @@ if (require.main === module) {
   main();
 }
 
-export { userPromptSubmitHook, HookInput, HookOutput };
+// Export only runtime values, not types
+export { userPromptSubmitHook };
+export type { HookInput, HookOutput };

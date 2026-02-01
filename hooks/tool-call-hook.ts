@@ -277,4 +277,6 @@ if (require.main === module) {
   main();
 }
 
-export { toolCallHook, HookInput, HookOutput };
+// Export only runtime values, not types
+export { toolCallHook };
+export type { HookInput, HookOutput };
