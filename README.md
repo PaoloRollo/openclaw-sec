@@ -175,14 +175,14 @@ CRITICAL → Block + notify security team
 
 ### Component Responsibilities
 
-**Security Engine** - Main orchestrator, coordinates all modules
-**Detection Modules** - Pattern matching and threat identification
-**Severity Scorer** - Calculates overall risk level
-**Action Engine** - Determines response (allow/warn/block)
-**Async Queue** - Non-blocking database and notification writes
-**Database Manager** - SQLite storage for events and analytics
-**Logger** - Structured JSON logging with rotation
-**Notification System** - Multi-channel alerting
+- **Security Engine** - Main orchestrator, coordinates all modules
+- **Detection Modules** - Pattern matching and threat identification
+- **Severity Scorer** - Calculates overall risk level
+- **Action Engine** - Determines response (allow/warn/block)
+- **Async Queue** - Non-blocking database and notification writes
+- **Database Manager** - SQLite storage for events and analytics
+- **Logger** - Structured JSON logging with rotation
+- **Notification System** - Multi-channel alerting
 
 ---
 
