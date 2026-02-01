@@ -1,8 +1,14 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import chalk from 'chalk';
 import { SecurityEngine, ValidationMetadata } from './core/security-engine';
+
+// Simple passthrough for chalk (no colors needed)
+const identity = (s: any) => s;
+const chalk: any = new Proxy(identity, {
+  get: () => chalk,
+  apply: (_t, _this, args) => args[0]
+});
 import { ConfigManager } from './core/config-manager';
 import { DatabaseManager, SecurityEvent } from './core/database-manager';
 import { Severity, Action } from './types';
