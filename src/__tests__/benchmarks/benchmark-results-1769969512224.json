@@ -1,0 +1,255 @@
+{
+  "timestamp": "2026-02-01T18:11:52.224Z",
+  "nodeVersion": "v24.12.0",
+  "platform": "darwin",
+  "arch": "arm64",
+  "results": [
+    {
+      "name": "PromptInjectionDetector (safe)",
+      "iterations": 200,
+      "min": 0.003833,
+      "max": 0.009834,
+      "avg": 0.0042241649999999915,
+      "median": 0.004208,
+      "p95": 0.004542,
+      "p99": 0.009042,
+      "totalTime": 0.8448329999999984
+    },
+    {
+      "name": "PromptInjectionDetector (malicious)",
+      "iterations": 200,
+      "min": 0.003833,
+      "max": 0.0075,
+      "avg": 0.004042265000000002,
+      "median": 0.003958,
+      "p95": 0.004292,
+      "p99": 0.007417,
+      "totalTime": 0.8084530000000004
+    },
+    {
+      "name": "CommandValidator (safe)",
+      "iterations": 200,
+      "min": 0.001583,
+      "max": 0.006833,
+      "avg": 0.0018155999999999969,
+      "median": 0.001791,
+      "p95": 0.001958,
+      "p99": 0.005125,
+      "totalTime": 0.3631199999999994
+    },
+    {
+      "name": "CommandValidator (malicious)",
+      "iterations": 200,
+      "min": 0.001833,
+      "max": 0.008625,
+      "avg": 0.001982099999999999,
+      "median": 0.001917,
+      "p95": 0.002125,
+      "p99": 0.003625,
+      "totalTime": 0.3964199999999997
+    },
+    {
+      "name": "URLValidator (safe)",
+      "iterations": 200,
+      "min": 0.006542,
+      "max": 0.019334,
+      "avg": 0.0074026950000000025,
+      "median": 0.007209,
+      "p95": 0.008,
+      "p99": 0.01875,
+      "totalTime": 1.4805390000000005
+    },
+    {
+      "name": "URLValidator (SSRF)",
+      "iterations": 200,
+      "min": 0.006,
+      "max": 0.020542,
+      "avg": 0.00647609,
+      "median": 0.006166,
+      "p95": 0.007167,
+      "p99": 0.015167,
+      "totalTime": 1.295218
+    },
+    {
+      "name": "PathValidator (safe)",
+      "iterations": 200,
+      "min": 0.002917,
+      "max": 0.01325,
+      "avg": 0.003424780000000008,
+      "median": 0.003459,
+      "p95": 0.003625,
+      "p99": 0.009792,
+      "totalTime": 0.6849560000000016
+    },
+    {
+      "name": "PathValidator (traversal)",
+      "iterations": 200,
+      "min": 0.002959,
+      "max": 0.010166,
+      "avg": 0.0036645799999999967,
+      "median": 0.003625,
+      "p95": 0.00425,
+      "p99": 0.010125,
+      "totalTime": 0.7329159999999993
+    },
+    {
+      "name": "SecretDetector (safe)",
+      "iterations": 200,
+      "min": 0.00925,
+      "max": 0.021167,
+      "avg": 0.009758095000000007,
+      "median": 0.009417,
+      "p95": 0.010791,
+      "p99": 0.016417,
+      "totalTime": 1.9516190000000013
+    },
+    {
+      "name": "SecretDetector (secrets)",
+      "iterations": 200,
+      "min": 0.009916,
+      "max": 0.025208,
+      "avg": 0.010764790000000017,
+      "median": 0.010167,
+      "p95": 0.011833,
+      "p99": 0.01775,
+      "totalTime": 2.1529580000000035
+    },
+    {
+      "name": "ContentScanner (safe)",
+      "iterations": 200,
+      "min": 0.007958,
+      "max": 0.02,
+      "avg": 0.00849063500000001,
+      "median": 0.008209,
+      "p95": 0.009375,
+      "p99": 0.015458,
+      "totalTime": 1.6981270000000022
+    },
+    {
+      "name": "ContentScanner (obfuscated)",
+      "iterations": 200,
+      "min": 0.008084,
+      "max": 0.01625,
+      "avg": 0.008331039999999993,
+      "median": 0.00825,
+      "p95": 0.008375,
+      "p99": 0.014125,
+      "totalTime": 1.6662079999999986
+    },
+    {
+      "name": "SecurityEngine (safe - fast path)",
+      "iterations": 150,
+      "min": 0.054667,
+      "max": 24.95575,
+      "avg": 0.48559725333333337,
+      "median": 0.063958,
+      "p95": 0.201084,
+      "p99": 18.911125,
+      "totalTime": 72.839588
+    },
+    {
+      "name": "SecurityEngine (empty input)",
+      "iterations": 150,
+      "min": 0.013708,
+      "max": 21.781875,
+      "avg": 0.37157534666666664,
+      "median": 0.016625,
+      "p95": 0.079958,
+      "p99": 17.415709,
+      "totalTime": 55.736301999999995
+    },
+    {
+      "name": "SecurityEngine (single threat)",
+      "iterations": 150,
+      "min": 0.05675,
+      "max": 20.869334,
+      "avg": 0.43626495333333326,
+      "median": 0.061583,
+      "p95": 0.173625,
+      "p99": 18.535208,
+      "totalTime": 65.43974299999999
+    },
+    {
+      "name": "SecurityEngine (multiple threats)",
+      "iterations": 150,
+      "min": 0.062625,
+      "max": 29.809833,
+      "avg": 0.5065155733333334,
+      "median": 0.073375,
+      "p95": 0.136208,
+      "p99": 18.392917,
+      "totalTime": 75.97733600000001
+    },
+    {
+      "name": "SecurityEngine (long input)",
+      "iterations": 100,
+      "min": 0.18575,
+      "max": 16.595042,
+      "avg": 0.54028582,
+      "median": 0.205375,
+      "p95": 0.351208,
+      "p99": 16.595042,
+      "totalTime": 54.02858200000001
+    },
+    {
+      "name": "Database write (insertEvent)",
+      "iterations": 200,
+      "min": 0.234584,
+      "max": 2.378666,
+      "avg": 0.38630957500000007,
+      "median": 0.351792,
+      "p95": 0.563875,
+      "p99": 1.414708,
+      "totalTime": 77.26191500000002
+    },
+    {
+      "name": "Config loading",
+      "iterations": 100,
+      "min": 0.241583,
+      "max": 0.471041,
+      "avg": 0.28758294,
+      "median": 0.275584,
+      "p95": 0.381917,
+      "p99": 0.471041,
+      "totalTime": 28.758294
+    },
+    {
+      "name": "SeverityScorer (no findings)",
+      "iterations": 200,
+      "min": 0.000666,
+      "max": 0.005125,
+      "avg": 0.0007591499999999996,
+      "median": 0.000708,
+      "p95": 0.000792,
+      "p99": 0.00175,
+      "totalTime": 0.1518299999999999
+    },
+    {
+      "name": "SeverityScorer (multiple findings)",
+      "iterations": 200,
+      "min": 0.001416,
+      "max": 0.004084,
+      "avg": 0.0016208599999999978,
+      "median": 0.0015,
+      "p95": 0.002541,
+      "p99": 0.004083,
+      "totalTime": 0.32417199999999957
+    },
+    {
+      "name": "ActionEngine (determine action)",
+      "iterations": 200,
+      "min": 0.006833,
+      "max": 0.0735,
+      "avg": 0.009549810000000002,
+      "median": 0.008209,
+      "p95": 0.013292,
+      "p99": 0.044291,
+      "totalTime": 1.9099620000000006
+    }
+  ],
+  "summary": {
+    "totalBenchmarks": 22,
+    "totalIterations": 4000,
+    "totalTime": 446.503091
+  }
+}

@@ -1010,6 +1010,3 @@ MIT License - See [LICENSE](./LICENSE) file for details.
 - **GitHub Issues:** [Report bugs](https://github.com/openclaw/openclaw-sec/issues)
 - **Discussions:** [Ask questions](https://github.com/openclaw/openclaw-sec/discussions)
 
----
-
-**Made with ❤️ by the OpenClaw Security Team**
