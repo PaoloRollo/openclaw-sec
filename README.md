@@ -181,6 +181,16 @@ CRITICAL → Block + notify security team
 
 ## Installation
 
+### ClawdHub (Recommended for OpenClaw)
+
+Install directly to OpenClaw using ClawdHub:
+
+```bash
+npx clawdhub@latest install openclaw-sec
+```
+
+This automatically installs the skill to `~/.openclaw/skills/openclaw-security/` and sets up hooks for automatic protection.
+
 ### NPM Package
 
 ```bash
@@ -190,7 +200,7 @@ npm install openclaw-sec
 ### From Source
 
 ```bash
-git clone https://github.com/openclaw/openclaw-sec.git
+git clone https://github.com/PaoloRollo/openclaw-sec.git
 cd openclaw-sec
 npm install
 npm run build
