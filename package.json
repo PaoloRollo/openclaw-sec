@@ -12,6 +12,8 @@
     "dev": "tsx src/cli.ts",
     "start": "node dist/cli.js",
     "test": "jest",
+    "pentest": "tsx tests/zeroleaks-pentest.ts",
+    "pentest:json": "tsx tests/zeroleaks-pentest.ts --json",
     "postinstall": "npm run build && cd hooks && bash install-hooks.sh"
   },
   "keywords": [],
