@@ -1,4 +1,4 @@
-import { DatabaseManager } from '../database-manager';
+import { DatabaseManager, DatabaseError } from '../database-manager';
 import { Severity, Action } from '../../types';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -257,5 +257,149 @@ describe('DatabaseManager', () => {
 
     const events = db.getEventsByUserId('user123');
     expect(events).toHaveLength(1);
+  });
+
+  describe('Error Handling', () => {
+    test('throws DatabaseError on invalid severity', () => {
+      const event = {
+        event_type: 'test',
+        severity: 'INVALID' as Severity,
+        action_taken: Action.BLOCK,
+        user_id: 'user123',
+        session_id: 'session456',
+        input_text: 'test',
+        patterns_matched: JSON.stringify([]),
+        fingerprint: 'hash',
+        module: 'test',
+        metadata: JSON.stringify({})
+      };
+
+      expect(() => db.insertEvent(event)).toThrow(DatabaseError);
+      expect(() => db.insertEvent(event)).toThrow(/Invalid severity/);
+    });
+
+    test('throws DatabaseError on invalid action', () => {
+      const event = {
+        event_type: 'test',
+        severity: Severity.HIGH,
+        action_taken: 'INVALID' as Action,
+        user_id: 'user123',
+        session_id: 'session456',
+        input_text: 'test',
+        patterns_matched: JSON.stringify([]),
+        fingerprint: 'hash',
+        module: 'test',
+        metadata: JSON.stringify({})
+      };
+
+      expect(() => db.insertEvent(event)).toThrow(DatabaseError);
+      expect(() => db.insertEvent(event)).toThrow(/Invalid action/);
+    });
+
+    test('throws DatabaseError on missing required fields', () => {
+      const event = {
+        event_type: '',
+        severity: Severity.HIGH,
+        action_taken: Action.BLOCK,
+        user_id: 'user123',
+        session_id: 'session456',
+        input_text: 'test',
+        patterns_matched: JSON.stringify([]),
+        fingerprint: 'hash',
+        module: 'test',
+        metadata: JSON.stringify({})
+      };
+
+      expect(() => db.insertEvent(event)).toThrow(DatabaseError);
+      expect(() => db.insertEvent(event)).toThrow(/event_type is required/);
+    });
+
+    test('throws DatabaseError on negative limit', () => {
+      expect(() => db.getEventsByUserId('user123', -1)).toThrow(DatabaseError);
+      expect(() => db.getEventsByUserId('user123', -1)).toThrow(/limit must be a positive integer/);
+    });
+
+    test('throws DatabaseError on invalid daysToKeep in deleteOldEvents', () => {
+      expect(() => db.deleteOldEvents(-5)).toThrow(DatabaseError);
+      expect(() => db.deleteOldEvents(-5)).toThrow(/daysToKeep must be a positive integer/);
+
+      expect(() => db.deleteOldEvents(1.5)).toThrow(DatabaseError);
+      expect(() => db.deleteOldEvents(1.5)).toThrow(/daysToKeep must be a positive integer/);
+    });
+
+    test('throws DatabaseError when operating on closed database', () => {
+      db.close();
+
+      expect(() => db.getTables()).toThrow(DatabaseError);
+      expect(() => db.getTables()).toThrow(/Database connection is closed/);
+    });
+
+    test('throws DatabaseError on invalid trust_score', () => {
+      const reputation = {
+        user_id: 'user123',
+        trust_score: -10,
+        total_requests: 10,
+        blocked_attempts: 0,
+        is_allowlisted: 0,
+        is_blocklisted: 0
+      };
+
+      expect(() => db.upsertUserReputation(reputation)).toThrow(DatabaseError);
+      expect(() => db.upsertUserReputation(reputation)).toThrow(/trust_score must be a non-negative number/);
+    });
+
+    test('throws DatabaseError on invalid boolean flags', () => {
+      const reputation = {
+        user_id: 'user123',
+        trust_score: 100,
+        total_requests: 10,
+        blocked_attempts: 0,
+        is_allowlisted: 2, // Invalid, should be 0 or 1
+        is_blocklisted: 0
+      };
+
+      expect(() => db.upsertUserReputation(reputation)).toThrow(DatabaseError);
+      expect(() => db.upsertUserReputation(reputation)).toThrow(/is_allowlisted must be 0 or 1/);
+    });
+
+    test('enforces foreign key constraints', () => {
+      const notificationLog = {
+        channel: 'slack',
+        severity: Severity.HIGH,
+        message: 'Test',
+        delivery_status: 'success',
+        event_id: 99999 // Non-existent event ID
+      };
+
+      // With foreign keys enabled, this should fail
+      expect(() => db.insertNotificationLog(notificationLog)).toThrow(DatabaseError);
+    });
+
+    test('validates attack pattern fields', () => {
+      const pattern = {
+        pattern: 'test pattern',
+        category: 'test',
+        severity: Severity.HIGH,
+        language: 'en',
+        times_matched: -1, // Invalid negative value
+        is_custom: 0,
+        enabled: 1
+      };
+
+      expect(() => db.upsertAttackPattern(pattern)).toThrow(DatabaseError);
+      expect(() => db.upsertAttackPattern(pattern)).toThrow(/times_matched must be a positive integer/);
+    });
+
+    test('validates rate limit fields', () => {
+      const rateLimit = {
+        user_id: 'user123',
+        request_count: -5, // Invalid negative value
+        window_start: new Date().toISOString(),
+        failed_attempts: 0
+      };
+
+      expect(() => db.upsertRateLimit(rateLimit)).toThrow(DatabaseError);
+      expect(() => db.upsertRateLimit(rateLimit)).toThrow(/request_count must be a positive integer/);
+    });
   });
 });
