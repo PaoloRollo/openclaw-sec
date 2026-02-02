@@ -11,7 +11,9 @@ module.exports = {
   testPathIgnorePatterns: [
     "/node_modules/",
     "/dist/",
-    "\\.d\\.ts$"
+    "\\.d\\.ts$",
+    "/benchmarks/",
+    "/integration/"
   ],
   testMatch: [
     "**/__tests__/**/*.test.ts",
