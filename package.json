@@ -14,7 +14,7 @@
     "test": "jest",
     "pentest": "tsx tests/zeroleaks-pentest.ts",
     "pentest:json": "tsx tests/zeroleaks-pentest.ts --json",
-    "postinstall": "npm run build && cd hooks && bash install-hooks.sh"
+    "postinstall": "npm run build && ([ -d hooks ] && cd hooks && bash install-hooks.sh || true)"
   },
   "keywords": [],
   "author": "",

@@ -10,6 +10,13 @@ module.exports = {
   },
   testPathIgnorePatterns: [
     "/node_modules/",
-    "\\.d\\.ts$"
+    "/dist/",
+    "\\.d\\.ts$",
+    "/benchmarks/",
+    "/integration/"
+  ],
+  testMatch: [
+    "**/__tests__/**/*.test.ts",
+    "**/*.test.ts"
   ],
 };

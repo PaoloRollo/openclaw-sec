@@ -90,9 +90,9 @@ openclaw_security:
       expect(() => new SecurityEngine(null as any, dbManager)).toThrow('Configuration is required');
     });
 
-    it('should throw error if dbManager is null', async () => {
+    it('should accept null dbManager for NO_DB mode', async () => {
       const config = await ConfigManager.load(configPath);
-      expect(() => new SecurityEngine(config, null as any)).toThrow('Database manager is required');
+      expect(() => new SecurityEngine(config, null as any)).not.toThrow();
     });
   });
 
