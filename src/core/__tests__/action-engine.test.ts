@@ -76,9 +76,9 @@ describe('ActionEngine', () => {
       expect(() => new ActionEngine(null as any, dbManager)).toThrow('Configuration is required');
     });
 
-    it('should throw error if dbManager is null', () => {
+    it('should accept null dbManager for NO_DB mode', () => {
       const config = createMockConfig();
-      expect(() => new ActionEngine(config, null as any)).toThrow('Database manager is required');
+      expect(() => new ActionEngine(config, null as any)).not.toThrow();
     });
   });
 
