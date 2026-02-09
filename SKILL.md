@@ -1,7 +1,7 @@
 ---
 name: openclaw-sec
 description: AI Agent Security Suite - Real-time protection against prompt injection, command injection, SSRF, path traversal, secrets exposure, and content policy violations
-version: 1.0.0
+version: 1.0.1
 author: OpenClaw Security Team
 metadata:
   category: security
@@ -981,7 +981,7 @@ openclaw-sec test
 
 ## Support
 
-- **GitHub:** [github.com/openclaw/openclaw-sec](https://github.com/openclaw/openclaw-sec)
+- **GitHub:** [github.com/PaoloRollo/openclaw-sec](https://github.com/PaoloRollo/openclaw-sec)
 - **Docs:** See README.md
 - **Issues:** Report via GitHub Issues
 
