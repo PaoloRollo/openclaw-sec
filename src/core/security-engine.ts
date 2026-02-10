@@ -9,6 +9,10 @@ import { URLValidator } from '../modules/url-validator/validator';
 import { PathValidator } from '../modules/path-validator/validator';
 import { SecretDetector } from '../modules/secret-detector/detector';
 import { ContentScanner } from '../modules/content-scanner/scanner';
+import { InjectionValidator } from '../modules/injection-validator/validator';
+import { ExfiltrationDetector } from '../modules/exfiltration-detector/detector';
+import { CodeExecutionDetector } from '../modules/code-execution-detector/detector';
+import { SerializationDetector } from '../modules/serialization-detector/detector';
 import * as crypto from 'crypto';
 
 /**
@@ -25,7 +29,7 @@ export interface ValidationMetadata {
  * severity scoring, action determination, and async writes.
  *
  * Architecture:
- * - Runs all 6 detection modules in parallel
+ * - Runs all 10 detection modules in parallel
  * - Aggregates findings with SeverityScorer
  * - Determines action with ActionEngine
  * - Returns results in ~20-50ms
@@ -48,12 +52,23 @@ export interface ValidationMetadata {
  * await engine.stop(); // Cleanup
  * ```
  */
+interface CacheEntry {
+  findings: Finding[];
+  severity: Severity;
+  timestamp: number;
+}
+
 export class SecurityEngine {
   private readonly config: SecurityConfig;
   private readonly dbManager: DatabaseManager;
   private readonly severityScorer: SeverityScorer;
   private readonly actionEngine: ActionEngine;
   private readonly writeQueue: AsyncQueue;
+
+  // Validation result cache (LRU)
+  private readonly cache: Map<string, CacheEntry> = new Map();
+  private readonly cacheSize: number;
+  private readonly cacheTtlMs: number;
 
   // Detection modules
   private readonly promptInjectionDetector: PromptInjectionDetector | null = null;
@@ -62,6 +77,10 @@ export class SecurityEngine {
   private readonly pathValidator: PathValidator | null = null;
   private readonly secretDetector: SecretDetector | null = null;
   private readonly contentScanner: ContentScanner | null = null;
+  private readonly injectionValidator: InjectionValidator | null = null;
+  private readonly exfiltrationDetector: ExfiltrationDetector | null = null;
+  private readonly codeExecutionDetector: CodeExecutionDetector | null = null;
+  private readonly serializationDetector: SerializationDetector | null = null;
 
   /**
    * Creates a new SecurityEngine instance
@@ -79,6 +98,8 @@ export class SecurityEngine {
     this.dbManager = dbManager!;
     this.severityScorer = new SeverityScorer();
     this.actionEngine = new ActionEngine(config, dbManager);
+    this.cacheSize = config.cacheSize ?? 1000;
+    this.cacheTtlMs = config.cacheTtlMs ?? 5 * 60 * 1000; // 5 minutes
 
     // Initialize async write queue (skip DB writes if no dbManager)
     this.writeQueue = new AsyncQueue({
@@ -115,6 +136,18 @@ export class SecurityEngine {
     if (config.modules.content_scanner?.enabled) {
       this.contentScanner = new ContentScanner(config.modules.content_scanner);
     }
+    if (config.modules.injection_validator?.enabled) {
+      this.injectionValidator = new InjectionValidator(config.modules.injection_validator);
+    }
+    if (config.modules.exfiltration_detector?.enabled) {
+      this.exfiltrationDetector = new ExfiltrationDetector(config.modules.exfiltration_detector);
+    }
+    if (config.modules.code_execution_detector?.enabled) {
+      this.codeExecutionDetector = new CodeExecutionDetector(config.modules.code_execution_detector);
+    }
+    if (config.modules.serialization_detector?.enabled) {
+      this.serializationDetector = new SerializationDetector(config.modules.serialization_detector);
+    }
   }
 
   /**
@@ -140,62 +173,87 @@ export class SecurityEngine {
       return this.createSafeResult(text);
     }
 
-    // Run all detection modules in parallel
-    const detectionPromises: Promise<Finding[]>[] = [];
+    // Generate fingerprint for cache lookup
+    const fingerprint = this.generateFingerprint(text);
 
-    if (this.promptInjectionDetector) {
-      detectionPromises.push(
-        this.promptInjectionDetector.scan(text).catch(() => [])
+    // Check cache
+    const cached = this.getCacheEntry(fingerprint);
+    if (cached) {
+      // Re-run action engine for the current user (action is user-specific)
+      const actionResult = await this.actionEngine.determineAction(
+        cached.severity,
+        metadata.userId
       );
+
+      const result: ValidationResult = {
+        severity: cached.severity,
+        action: actionResult.action,
+        findings: cached.findings,
+        fingerprint,
+        timestamp: new Date(),
+        normalizedText: this.normalizeText(text),
+        recommendations: this.generateRecommendations(cached.findings, actionResult.action)
+      };
+
+      this.queueDatabaseWrite(result, metadata);
+      return result;
     }
 
-    if (this.commandValidator) {
-      detectionPromises.push(
-        this.commandValidator.validate(text).catch(() => [])
-      );
+    // Compute input entropy before module dispatch
+    const entropy = this.calculateEntropy(text);
+
+    // Collect all findings
+    let allFindings: Finding[];
+
+    if (this.config.earlyExitOnCritical) {
+      // Two-phase execution: run fast modules first
+      allFindings = await this.runWithEarlyExit(text);
+    } else {
+      // Standard parallel execution
+      allFindings = await this.runAllModules(text);
     }
 
-    if (this.urlValidator) {
-      detectionPromises.push(
-        this.urlValidator.validate(text).catch(() => [])
-      );
+    // Inject synthetic entropy finding if entropy is high
+    if (entropy > 4.5) {
+      allFindings.push({
+        module: 'entropy_analysis',
+        pattern: {
+          id: 'entropy_001',
+          category: 'high_entropy',
+          pattern: '',
+          severity: Severity.MEDIUM,
+          language: 'all',
+          description: `Input has high Shannon entropy (${entropy.toFixed(2)} bits/char), indicating possible obfuscation`,
+          examples: [],
+          falsePositiveRisk: 'medium',
+          enabled: true,
+          tags: ['entropy', 'obfuscation', 'anomaly']
+        },
+        matchedText: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
+        severity: Severity.MEDIUM,
+        metadata: {
+          entropy: entropy,
+          textLength: text.length,
+          category: 'high_entropy'
+        }
+      });
     }
-
-    if (this.pathValidator) {
-      detectionPromises.push(
-        this.pathValidator.validate(text).catch(() => [])
-      );
-    }
-
-    if (this.secretDetector) {
-      detectionPromises.push(
-        this.secretDetector.scan(text).catch(() => [])
-      );
-    }
-
-    if (this.contentScanner) {
-      detectionPromises.push(
-        this.contentScanner.scan(text).catch(() => [])
-      );
-    }
-
-    // Wait for all modules to complete
-    const results = await Promise.all(detectionPromises);
-
-    // Aggregate all findings
-    const allFindings: Finding[] = results.flat();
 
     // Calculate severity
     const severityResult = this.severityScorer.calculateSeverity(allFindings);
+
+    // Store in cache
+    this.setCacheEntry(fingerprint, {
+      findings: allFindings,
+      severity: severityResult.severity,
+      timestamp: Date.now()
+    });
 
     // Determine action
     const actionResult = await this.actionEngine.determineAction(
       severityResult.severity,
       metadata.userId
     );
-
-    // Generate fingerprint
-    const fingerprint = this.generateFingerprint(text);
 
     // Create validation result
     const result: ValidationResult = {
@@ -212,6 +270,106 @@ export class SecurityEngine {
     this.queueDatabaseWrite(result, metadata);
 
     return result;
+  }
+
+  /**
+   * Run all detection modules in parallel (standard mode)
+   * @private
+   */
+  private async runAllModules(text: string): Promise<Finding[]> {
+    const detectionPromises: Promise<Finding[]>[] = [];
+
+    if (this.promptInjectionDetector) {
+      detectionPromises.push(this.promptInjectionDetector.scan(text).catch(() => []));
+    }
+    if (this.commandValidator) {
+      detectionPromises.push(this.commandValidator.validate(text).catch(() => []));
+    }
+    if (this.urlValidator) {
+      detectionPromises.push(this.urlValidator.validate(text).catch(() => []));
+    }
+    if (this.pathValidator) {
+      detectionPromises.push(this.pathValidator.validate(text).catch(() => []));
+    }
+    if (this.secretDetector) {
+      detectionPromises.push(this.secretDetector.scan(text).catch(() => []));
+    }
+    if (this.contentScanner) {
+      detectionPromises.push(this.contentScanner.scan(text).catch(() => []));
+    }
+    if (this.injectionValidator) {
+      detectionPromises.push(this.injectionValidator.validate(text).catch(() => []));
+    }
+    if (this.exfiltrationDetector) {
+      detectionPromises.push(this.exfiltrationDetector.scan(text).catch(() => []));
+    }
+    if (this.codeExecutionDetector) {
+      detectionPromises.push(this.codeExecutionDetector.scan(text).catch(() => []));
+    }
+    if (this.serializationDetector) {
+      detectionPromises.push(this.serializationDetector.scan(text).catch(() => []));
+    }
+
+    const results = await Promise.all(detectionPromises);
+    return results.flat();
+  }
+
+  /**
+   * Two-phase execution with early exit on CRITICAL findings
+   * Phase 1: Run fast modules (command, path, injection validators)
+   * Phase 2: If no CRITICAL found, run remaining modules
+   * @private
+   */
+  private async runWithEarlyExit(text: string): Promise<Finding[]> {
+    // Phase 1: Fast regex-only modules
+    const fastPromises: Promise<Finding[]>[] = [];
+
+    if (this.commandValidator) {
+      fastPromises.push(this.commandValidator.validate(text).catch(() => []));
+    }
+    if (this.pathValidator) {
+      fastPromises.push(this.pathValidator.validate(text).catch(() => []));
+    }
+    if (this.injectionValidator) {
+      fastPromises.push(this.injectionValidator.validate(text).catch(() => []));
+    }
+
+    const fastResults = await Promise.all(fastPromises);
+    const fastFindings = fastResults.flat();
+
+    // Check for CRITICAL
+    const hasCritical = fastFindings.some(f => f.severity === Severity.CRITICAL);
+    if (hasCritical) {
+      return fastFindings;
+    }
+
+    // Phase 2: Run remaining modules
+    const slowPromises: Promise<Finding[]>[] = [];
+
+    if (this.promptInjectionDetector) {
+      slowPromises.push(this.promptInjectionDetector.scan(text).catch(() => []));
+    }
+    if (this.urlValidator) {
+      slowPromises.push(this.urlValidator.validate(text).catch(() => []));
+    }
+    if (this.secretDetector) {
+      slowPromises.push(this.secretDetector.scan(text).catch(() => []));
+    }
+    if (this.contentScanner) {
+      slowPromises.push(this.contentScanner.scan(text).catch(() => []));
+    }
+    if (this.exfiltrationDetector) {
+      slowPromises.push(this.exfiltrationDetector.scan(text).catch(() => []));
+    }
+    if (this.codeExecutionDetector) {
+      slowPromises.push(this.codeExecutionDetector.scan(text).catch(() => []));
+    }
+    if (this.serializationDetector) {
+      slowPromises.push(this.serializationDetector.scan(text).catch(() => []));
+    }
+
+    const slowResults = await Promise.all(slowPromises);
+    return [...fastFindings, ...slowResults.flat()];
   }
 
   /**
@@ -253,6 +411,63 @@ export class SecurityEngine {
    */
   private normalizeText(text: string): string {
     return text.toLowerCase().replace(/\s+/g, ' ').trim();
+  }
+
+  /**
+   * Calculate Shannon entropy of input text (bits per character)
+   * @private
+   */
+  private calculateEntropy(text: string): number {
+    if (text.length === 0) return 0;
+
+    const freq = new Map<string, number>();
+    for (const char of text) {
+      freq.set(char, (freq.get(char) || 0) + 1);
+    }
+
+    let entropy = 0;
+    const len = text.length;
+    for (const count of freq.values()) {
+      const p = count / len;
+      if (p > 0) {
+        entropy -= p * Math.log2(p);
+      }
+    }
+
+    return entropy;
+  }
+
+  /**
+   * Get a cache entry if it exists and is not expired
+   * @private
+   */
+  private getCacheEntry(fingerprint: string): CacheEntry | null {
+    const entry = this.cache.get(fingerprint);
+    if (!entry) return null;
+
+    // Check TTL
+    if (Date.now() - entry.timestamp > this.cacheTtlMs) {
+      this.cache.delete(fingerprint);
+      return null;
+    }
+
+    return entry;
+  }
+
+  /**
+   * Set a cache entry, evicting oldest if at capacity
+   * @private
+   */
+  private setCacheEntry(fingerprint: string, entry: CacheEntry): void {
+    // Evict oldest entry if at capacity
+    if (this.cache.size >= this.cacheSize && !this.cache.has(fingerprint)) {
+      const firstKey = this.cache.keys().next().value;
+      if (firstKey !== undefined) {
+        this.cache.delete(firstKey);
+      }
+    }
+
+    this.cache.set(fingerprint, entry);
   }
 
   /**
@@ -300,6 +515,22 @@ export class SecurityEngine {
         case 'content_scanner':
           recommendations.push('Review content for policy violations');
           recommendations.push('Implement content filtering or moderation');
+          break;
+        case 'injection_validator':
+          recommendations.push('Sanitize inputs to prevent injection attacks');
+          recommendations.push('Use parameterized queries and prepared statements');
+          break;
+        case 'exfiltration_detector':
+          recommendations.push('Review outbound connections for data exfiltration attempts');
+          recommendations.push('Implement egress filtering and data loss prevention');
+          break;
+        case 'code_execution_detector':
+          recommendations.push('Review input for code execution attempts');
+          recommendations.push('Restrict dynamic code evaluation and sandboxing');
+          break;
+        case 'serialization_detector':
+          recommendations.push('Avoid deserializing untrusted data');
+          recommendations.push('Use safe deserialization methods with type allowlists');
           break;
       }
     });

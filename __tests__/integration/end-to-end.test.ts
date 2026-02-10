@@ -110,7 +110,7 @@ describe('End-to-End Integration Tests', () => {
       const duration = Date.now() - startTime;
 
       expect(result).toBeDefined();
-      expect(duration).toBeLessThan(500); // Should complete in reasonable time
+      expect(duration).toBeLessThan(2000); // Should complete in reasonable time (10 modules, 10k chars)
     });
   });
 

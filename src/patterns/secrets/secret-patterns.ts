@@ -383,5 +383,200 @@ export const secretPatterns: SecurityPattern[] = [
     falsePositiveRisk: 'low',
     enabled: true,
     tags: ['secret', 'api-key', 'gitlab', 'critical']
+  },
+  {
+    id: 'secret_025',
+    category: 'secret',
+    subcategory: 'supabase_key',
+    pattern: /sbp_[a-f0-9]{40}/,
+    severity: Severity.CRITICAL,
+    language: 'all',
+    description: 'Supabase service key',
+    examples: [
+      'sbp_' + 'a'.repeat(40)
+    ],
+    falsePositiveRisk: 'low',
+    enabled: true,
+    tags: ['secret', 'api-key', 'supabase', 'critical']
+  },
+  {
+    id: 'secret_026',
+    category: 'secret',
+    subcategory: 'vercel_token',
+    pattern: /vc_[a-zA-Z0-9_\-]{24,}/,
+    severity: Severity.HIGH,
+    language: 'all',
+    description: 'Vercel authentication token',
+    examples: [
+      'vc_' + 'x'.repeat(24)
+    ],
+    falsePositiveRisk: 'low',
+    enabled: true,
+    tags: ['secret', 'api-key', 'vercel']
+  },
+  {
+    id: 'secret_027',
+    category: 'secret',
+    subcategory: 'cloudflare_api_token',
+    pattern: /cf_[a-zA-Z0-9_\-]{37,}/,
+    severity: Severity.HIGH,
+    language: 'all',
+    description: 'Cloudflare API token',
+    examples: [
+      'cf_' + 'x'.repeat(40)
+    ],
+    falsePositiveRisk: 'low',
+    enabled: true,
+    tags: ['secret', 'api-key', 'cloudflare']
+  },
+  {
+    id: 'secret_028',
+    category: 'secret',
+    subcategory: 'azure_connection_string',
+    pattern: /(?:DefaultEndpointsProtocol|AccountName|AccountKey|EndpointSuffix)\s*=[^\s;]+/i,
+    severity: Severity.CRITICAL,
+    language: 'all',
+    description: 'Azure Storage connection string component',
+    examples: [
+      'DefaultEndpointsProtocol=https;AccountName=mystorageaccount;AccountKey=abc123==;EndpointSuffix=core.windows.net'
+    ],
+    falsePositiveRisk: 'medium',
+    enabled: true,
+    tags: ['secret', 'connection-string', 'azure', 'critical']
+  },
+  {
+    id: 'secret_029',
+    category: 'secret',
+    subcategory: 'databricks_token',
+    pattern: /dapi[a-f0-9]{32}/,
+    severity: Severity.HIGH,
+    language: 'all',
+    description: 'Databricks personal access token',
+    examples: [
+      'dapi' + 'a'.repeat(32)
+    ],
+    falsePositiveRisk: 'low',
+    enabled: true,
+    tags: ['secret', 'api-key', 'databricks']
+  },
+  {
+    id: 'secret_030',
+    category: 'secret',
+    subcategory: 'huggingface_token',
+    pattern: /hf_[a-zA-Z0-9]{34,}/,
+    severity: Severity.HIGH,
+    language: 'all',
+    description: 'HuggingFace API token',
+    examples: [
+      'hf_' + 'x'.repeat(34)
+    ],
+    falsePositiveRisk: 'low',
+    enabled: true,
+    tags: ['secret', 'api-key', 'huggingface', 'ai']
+  },
+  {
+    id: 'secret_031',
+    category: 'secret',
+    subcategory: 'replicate_token',
+    pattern: /r8_[a-zA-Z0-9]{36,}/,
+    severity: Severity.HIGH,
+    language: 'all',
+    description: 'Replicate API token',
+    examples: [
+      'r8_' + 'x'.repeat(36)
+    ],
+    falsePositiveRisk: 'low',
+    enabled: true,
+    tags: ['secret', 'api-key', 'replicate', 'ai']
+  },
+  {
+    id: 'secret_032',
+    category: 'secret',
+    subcategory: 'planetscale_token',
+    pattern: /pscale_tkn_[a-zA-Z0-9_\-]{32,}/,
+    severity: Severity.HIGH,
+    language: 'all',
+    description: 'PlanetScale database token',
+    examples: [
+      'pscale_tkn_' + 'x'.repeat(32)
+    ],
+    falsePositiveRisk: 'low',
+    enabled: true,
+    tags: ['secret', 'api-key', 'planetscale', 'database']
+  },
+  {
+    id: 'secret_033',
+    category: 'secret',
+    subcategory: 'linear_api_key',
+    pattern: /lin_api_[a-zA-Z0-9]{32,}/,
+    severity: Severity.HIGH,
+    language: 'all',
+    description: 'Linear API key',
+    examples: [
+      'lin_api_' + 'x'.repeat(32)
+    ],
+    falsePositiveRisk: 'low',
+    enabled: true,
+    tags: ['secret', 'api-key', 'linear']
+  },
+  {
+    id: 'secret_034',
+    category: 'secret',
+    subcategory: 'grafana_cloud_token',
+    pattern: /glc_[a-zA-Z0-9_\-]{32,}/,
+    severity: Severity.HIGH,
+    language: 'all',
+    description: 'Grafana Cloud API token',
+    examples: [
+      'glc_' + 'x'.repeat(32)
+    ],
+    falsePositiveRisk: 'low',
+    enabled: true,
+    tags: ['secret', 'api-key', 'grafana']
+  },
+  {
+    id: 'secret_035',
+    category: 'secret',
+    subcategory: 'hashicorp_vault_token',
+    pattern: /hvs\.[a-zA-Z0-9_\-]{24,}/,
+    severity: Severity.CRITICAL,
+    language: 'all',
+    description: 'HashiCorp Vault service token',
+    examples: [
+      'hvs.' + 'x'.repeat(24)
+    ],
+    falsePositiveRisk: 'low',
+    enabled: true,
+    tags: ['secret', 'api-key', 'hashicorp', 'vault', 'critical']
+  },
+  {
+    id: 'secret_036',
+    category: 'secret',
+    subcategory: 'doppler_token',
+    pattern: /dp\.st\.[a-zA-Z0-9_\-]{40,}/,
+    severity: Severity.HIGH,
+    language: 'all',
+    description: 'Doppler service token',
+    examples: [
+      'dp.st.' + 'x'.repeat(40)
+    ],
+    falsePositiveRisk: 'low',
+    enabled: true,
+    tags: ['secret', 'api-key', 'doppler']
+  },
+  {
+    id: 'secret_037',
+    category: 'secret',
+    subcategory: 'firebase_key',
+    pattern: /AIzaSy[0-9A-Za-z\-_]{33}/,
+    severity: Severity.CRITICAL,
+    language: 'all',
+    description: 'Firebase API key',
+    examples: [
+      'AIzaSy' + 'x'.repeat(33)
+    ],
+    falsePositiveRisk: 'medium',
+    enabled: false,
+    tags: ['secret', 'api-key', 'firebase', 'google', 'disabled-duplicate']
   }
 ];
