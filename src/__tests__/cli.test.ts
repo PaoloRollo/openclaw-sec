@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 describe('CLI', () => {
-  const cliPath = path.join(__dirname, '..', 'cli.ts');
+  const cliPath = path.join(process.cwd(), 'src', 'cli.ts');
   const testDbPath = '.openclaw-sec-test.db';
 
   beforeEach(() => {

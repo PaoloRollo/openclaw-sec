@@ -63,7 +63,6 @@ export class ActionEngine {
     if (!config) {
       throw new Error('Configuration is required');
     }
-
     this.config = config;
     this.dbManager = dbManager!;
   }

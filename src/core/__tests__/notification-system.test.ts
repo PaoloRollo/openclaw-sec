@@ -1,20 +1,28 @@
 import { NotificationSystem, NotificationPayload } from '../notification-system';
 import { Severity, Action, NotificationConfig } from '../../types';
+
+// Mock functions that will be used by the mocked modules
+let mockHttpsRequest: jest.Mock;
+let mockHttpRequest: jest.Mock;
+
+jest.mock('https', () => ({
+  request: jest.fn()
+}));
+
+jest.mock('http', () => ({
+  request: jest.fn()
+}));
+
 import * as https from 'https';
 import * as http from 'http';
 
-// Mock https.request
-jest.mock('https');
-jest.mock('http');
+// Get the mocked functions
+mockHttpsRequest = https.request as unknown as jest.Mock;
+mockHttpRequest = http.request as unknown as jest.Mock;
 
 describe('NotificationSystem', () => {
-  let mockHttpsRequest: any;
-  let mockHttpRequest: any;
-
   beforeEach(() => {
-    // Setup mocks
-    mockHttpsRequest = https.request as any;
-    mockHttpRequest = http.request as any;
+    jest.clearAllMocks();
 
     // Default mock implementation
     const mockResponse = {

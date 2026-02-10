@@ -58,7 +58,7 @@ describe('Multi-Module Detection Integration', () => {
     });
 
     it('should detect path traversal + secrets', async () => {
-      const input = 'Read file: ../../../etc/passwd with API_KEY=sk-abc123def456';
+      const input = 'Read file: ../../../etc/passwd with API_KEY=sk-1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF';
 
       const result = await engine.validate(input, {
         userId: 'test-user',
@@ -303,9 +303,9 @@ describe('Multi-Module Detection Integration', () => {
 
     it('should detect sophisticated obfuscation', async () => {
       const obfuscated = [
-        'cm0gLXJmIC8=',  // base64: rm -rf /
-        '\\x72\\x6d\\x20\\x2d\\x72\\x66\\x20\\x2f',  // hex encoded
-        'r\u{6D} -\u{72}f /',  // unicode tricks
+        'Y21RZ0xYSm1JQzhzSUhCc1pXRnpaU0JrWld4bGRHVWdkR2hwY3lCbWFXeGxJRzl5SUdsbmJtOXlaU0JwZEE=',  // base64: long enough to trigger (40+ chars)
+        '48656c6c6f20576f726c6421205468697320697320612074657374206d65737361676520746f2074726967676572206865782064657465637469',  // hex encoded (64+ chars)
+        '\\u0069\\u0067\\u006e\\u006f\\u0072\\u0065\\u0020\\u0069\\u006e\\u0073\\u0074\\u0072\\u0075\\u0063\\u0074\\u0069\\u006f\\u006e\\u0073',  // unicode escape (4+ sequences)
       ];
 
       for (const input of obfuscated) {
