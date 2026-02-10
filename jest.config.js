@@ -8,8 +8,13 @@ module.exports = {
   transform: {
     ...tsJestTransformCfg,
   },
+  testMatch: [
+    "**/__tests__/**/*.test.ts",
+    "**/src/**/*.test.ts"
+  ],
   testPathIgnorePatterns: [
     "/node_modules/",
+    "/dist/",
     "\\.d\\.ts$"
   ],
 };
