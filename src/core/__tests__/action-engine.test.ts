@@ -31,7 +31,11 @@ describe('ActionEngine', () => {
       url_validator: { enabled: true },
       path_validator: { enabled: true },
       secret_detector: { enabled: true },
-      content_scanner: { enabled: true }
+      content_scanner: { enabled: true },
+      injection_validator: { enabled: true },
+      exfiltration_detector: { enabled: true },
+      code_execution_detector: { enabled: true },
+      serialization_detector: { enabled: true }
     },
     actions: {
       [Severity.SAFE]: Action.ALLOW,

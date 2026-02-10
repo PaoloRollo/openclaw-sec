@@ -381,7 +381,7 @@ describe('Performance Benchmarks', () => {
       console.log(`  Input size: ${longInput.length} characters`);
       console.log(`  Validation time: ${duration}ms`);
 
-      expect(duration).toBeLessThan(1000); // Allow more time for very long input
+      expect(duration).toBeLessThan(2000); // Allow more time for very long input (10 modules)
       expect(result).toBeDefined();
     });
 

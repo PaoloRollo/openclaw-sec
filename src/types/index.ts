@@ -56,6 +56,9 @@ export interface SecurityConfig {
   notifications: NotificationConfig;
   logging: LoggingConfig;
   database: DatabaseConfig;
+  earlyExitOnCritical?: boolean;
+  cacheSize?: number;
+  cacheTtlMs?: number;
 }
 
 export interface ModuleConfigs {
@@ -65,6 +68,10 @@ export interface ModuleConfigs {
   path_validator: ModuleConfig;
   secret_detector: ModuleConfig;
   content_scanner: ModuleConfig;
+  injection_validator: ModuleConfig;
+  exfiltration_detector: ModuleConfig;
+  code_execution_detector: ModuleConfig;
+  serialization_detector: ModuleConfig;
 }
 
 export interface ModuleConfig {

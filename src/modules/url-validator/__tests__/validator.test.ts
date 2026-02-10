@@ -302,5 +302,87 @@ describe('URLValidator', () => {
         expect(findings.length).toBeGreaterThan(0);
       });
     });
+
+    describe('Cloud metadata endpoints (expanded)', () => {
+      it('should detect Azure IMDS endpoint', async () => {
+        const validator = new URLValidator(defaultConfig);
+        const url = 'http://169.254.169.254/metadata/instance?api-version=2021-02-01';
+
+        const findings = await validator.validate(url);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'azure_imds')).toBe(true);
+      });
+
+      it('should detect Azure Wire Server', async () => {
+        const validator = new URLValidator(defaultConfig);
+        const url = 'http://168.63.129.16/machine?comp=goalstate';
+
+        const findings = await validator.validate(url);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'azure_wire_server')).toBe(true);
+      });
+
+      it('should detect DigitalOcean metadata', async () => {
+        const validator = new URLValidator(defaultConfig);
+        const url = 'http://169.254.169.254/metadata/v1/hostname';
+
+        const findings = await validator.validate(url);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'digitalocean_metadata')).toBe(true);
+      });
+
+      it('should detect Oracle Cloud metadata', async () => {
+        const validator = new URLValidator(defaultConfig);
+        const url = 'http://169.254.169.254/opc/v1/instance/';
+
+        const findings = await validator.validate(url);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'oracle_metadata')).toBe(true);
+      });
+
+      it('should detect Oracle Cloud metadata v2', async () => {
+        const validator = new URLValidator(defaultConfig);
+        const url = 'http://169.254.169.254/opc/v2/instance/metadata/';
+
+        const findings = await validator.validate(url);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'oracle_metadata')).toBe(true);
+      });
+
+      it('should detect Alibaba Cloud metadata', async () => {
+        const validator = new URLValidator(defaultConfig);
+        const url = 'http://100.100.100.200/latest/meta-data/instance-id';
+
+        const findings = await validator.validate(url);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'alibaba_metadata')).toBe(true);
+      });
+
+      it('should detect Kubernetes API server', async () => {
+        const validator = new URLValidator(defaultConfig);
+        const url = 'https://kubernetes.default.svc/api/v1/namespaces';
+
+        const findings = await validator.validate(url);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'kubernetes_api')).toBe(true);
+      });
+
+      it('should detect Kubernetes API with cluster.local', async () => {
+        const validator = new URLValidator(defaultConfig);
+        const url = 'https://kubernetes.default.svc.cluster.local/api';
+
+        const findings = await validator.validate(url);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'kubernetes_api')).toBe(true);
+      });
+    });
   });
 });

@@ -172,5 +172,102 @@ export const ssrfPatterns: SecurityPattern[] = [
     falsePositiveRisk: 'low',
     enabled: true,
     tags: ['ssrf', 'file-protocol', 'local-file-inclusion', 'critical']
+  },
+  {
+    id: 'ssrf_011',
+    category: 'ssrf',
+    subcategory: 'azure_imds',
+    pattern: /(?:https?:\/\/)?169\.254\.169\.254(?::\d+)?\/metadata\/instance/i,
+    severity: Severity.CRITICAL,
+    language: 'all',
+    description: 'Azure Instance Metadata Service (IMDS) endpoint',
+    examples: [
+      'http://169.254.169.254/metadata/instance',
+      'http://169.254.169.254/metadata/instance?api-version=2021-02-01'
+    ],
+    falsePositiveRisk: 'low',
+    enabled: true,
+    tags: ['ssrf', 'azure', 'imds', 'metadata', 'cloud', 'critical']
+  },
+  {
+    id: 'ssrf_012',
+    category: 'ssrf',
+    subcategory: 'azure_wire_server',
+    pattern: /(?:https?:\/\/)?168\.63\.129\.16(?::\d+)?(?:\/|$)/i,
+    severity: Severity.HIGH,
+    language: 'all',
+    description: 'Azure Wire Server IP address',
+    examples: [
+      'http://168.63.129.16/',
+      'http://168.63.129.16/machine?comp=goalstate'
+    ],
+    falsePositiveRisk: 'low',
+    enabled: true,
+    tags: ['ssrf', 'azure', 'wire-server', 'cloud']
+  },
+  {
+    id: 'ssrf_013',
+    category: 'ssrf',
+    subcategory: 'digitalocean_metadata',
+    pattern: /(?:https?:\/\/)?169\.254\.169\.254(?::\d+)?\/metadata\/v1/i,
+    severity: Severity.CRITICAL,
+    language: 'all',
+    description: 'DigitalOcean metadata service endpoint',
+    examples: [
+      'http://169.254.169.254/metadata/v1/',
+      'http://169.254.169.254/metadata/v1/hostname'
+    ],
+    falsePositiveRisk: 'low',
+    enabled: true,
+    tags: ['ssrf', 'digitalocean', 'metadata', 'cloud', 'critical']
+  },
+  {
+    id: 'ssrf_014',
+    category: 'ssrf',
+    subcategory: 'oracle_metadata',
+    pattern: /(?:https?:\/\/)?169\.254\.169\.254(?::\d+)?\/opc\/v[12]/i,
+    severity: Severity.CRITICAL,
+    language: 'all',
+    description: 'Oracle Cloud Infrastructure metadata endpoint',
+    examples: [
+      'http://169.254.169.254/opc/v1/instance/',
+      'http://169.254.169.254/opc/v2/instance/metadata/'
+    ],
+    falsePositiveRisk: 'low',
+    enabled: true,
+    tags: ['ssrf', 'oracle', 'oci', 'metadata', 'cloud', 'critical']
+  },
+  {
+    id: 'ssrf_015',
+    category: 'ssrf',
+    subcategory: 'alibaba_metadata',
+    pattern: /(?:https?:\/\/)?100\.100\.100\.200(?::\d+)?\/latest\/meta-data/i,
+    severity: Severity.CRITICAL,
+    language: 'all',
+    description: 'Alibaba Cloud metadata service endpoint',
+    examples: [
+      'http://100.100.100.200/latest/meta-data/',
+      'http://100.100.100.200/latest/meta-data/instance-id'
+    ],
+    falsePositiveRisk: 'low',
+    enabled: true,
+    tags: ['ssrf', 'alibaba', 'aliyun', 'metadata', 'cloud', 'critical']
+  },
+  {
+    id: 'ssrf_016',
+    category: 'ssrf',
+    subcategory: 'kubernetes_api',
+    pattern: /(?:https?:\/\/)?kubernetes\.default\.svc(?:\.[a-z]+)*(?::\d+)?(?:\/|$)/i,
+    severity: Severity.CRITICAL,
+    language: 'all',
+    description: 'Kubernetes internal API server endpoint',
+    examples: [
+      'https://kubernetes.default.svc/api/v1/namespaces',
+      'https://kubernetes.default.svc.cluster.local/api',
+      'http://kubernetes.default.svc/'
+    ],
+    falsePositiveRisk: 'low',
+    enabled: true,
+    tags: ['ssrf', 'kubernetes', 'k8s', 'api-server', 'cloud', 'critical']
   }
 ];

@@ -513,5 +513,140 @@ describe('SecretDetector', () => {
         }
       });
     });
+
+    describe('New service tokens (expanded)', () => {
+      it('should detect Supabase key', async () => {
+        const detector = new SecretDetector(defaultConfig);
+        const text = 'sbp_' + 'a'.repeat(40);
+
+        const findings = await detector.scan(text);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'supabase_key')).toBe(true);
+      });
+
+      it('should detect Vercel token', async () => {
+        const detector = new SecretDetector(defaultConfig);
+        const text = 'vc_' + 'x'.repeat(24);
+
+        const findings = await detector.scan(text);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'vercel_token')).toBe(true);
+      });
+
+      it('should detect Cloudflare token', async () => {
+        const detector = new SecretDetector(defaultConfig);
+        const text = 'cf_' + 'x'.repeat(40);
+
+        const findings = await detector.scan(text);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'cloudflare_api_token')).toBe(true);
+      });
+
+      it('should detect Azure connection string', async () => {
+        const detector = new SecretDetector(defaultConfig);
+        const text = 'DefaultEndpointsProtocol=https;AccountName=myaccount;AccountKey=abc123==;EndpointSuffix=core.windows.net';
+
+        const findings = await detector.scan(text);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'azure_connection_string')).toBe(true);
+      });
+
+      it('should detect Databricks token', async () => {
+        const detector = new SecretDetector(defaultConfig);
+        const text = 'dapi' + 'a'.repeat(32);
+
+        const findings = await detector.scan(text);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'databricks_token')).toBe(true);
+      });
+
+      it('should detect HuggingFace token', async () => {
+        const detector = new SecretDetector(defaultConfig);
+        const text = 'hf_' + 'x'.repeat(34);
+
+        const findings = await detector.scan(text);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'huggingface_token')).toBe(true);
+      });
+
+      it('should detect Replicate token', async () => {
+        const detector = new SecretDetector(defaultConfig);
+        const text = 'r8_' + 'x'.repeat(36);
+
+        const findings = await detector.scan(text);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'replicate_token')).toBe(true);
+      });
+
+      it('should detect PlanetScale token', async () => {
+        const detector = new SecretDetector(defaultConfig);
+        const text = 'pscale_tkn_' + 'x'.repeat(32);
+
+        const findings = await detector.scan(text);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'planetscale_token')).toBe(true);
+      });
+
+      it('should detect Linear API key', async () => {
+        const detector = new SecretDetector(defaultConfig);
+        const text = 'lin_api_' + 'x'.repeat(32);
+
+        const findings = await detector.scan(text);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'linear_api_key')).toBe(true);
+      });
+
+      it('should detect Grafana Cloud token', async () => {
+        const detector = new SecretDetector(defaultConfig);
+        const text = 'glc_' + 'x'.repeat(32);
+
+        const findings = await detector.scan(text);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'grafana_cloud_token')).toBe(true);
+      });
+
+      it('should detect HashiCorp Vault token', async () => {
+        const detector = new SecretDetector(defaultConfig);
+        const text = 'hvs.' + 'x'.repeat(24);
+
+        const findings = await detector.scan(text);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'hashicorp_vault_token')).toBe(true);
+      });
+
+      it('should detect Doppler token', async () => {
+        const detector = new SecretDetector(defaultConfig);
+        const text = 'dp.st.' + 'x'.repeat(40);
+
+        const findings = await detector.scan(text);
+
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'doppler_token')).toBe(true);
+      });
+
+      it('should not detect disabled Firebase key', async () => {
+        const detector = new SecretDetector(defaultConfig);
+        // Firebase pattern is disabled but matches Google API key pattern (which is enabled)
+        const text = 'AIzaSy' + 'x'.repeat(33);
+
+        const findings = await detector.scan(text);
+
+        // Should be detected by existing google_api_key pattern, not firebase_key
+        expect(findings.length).toBeGreaterThan(0);
+        expect(findings.some(f => f.pattern.subcategory === 'google_api_key')).toBe(true);
+        expect(findings.every(f => f.pattern.subcategory !== 'firebase_key')).toBe(true);
+      });
+    });
   });
 });
