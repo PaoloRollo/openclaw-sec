@@ -16,10 +16,10 @@
 npx clawdhub@latest install openclaw-sec
 ```
 
-That's it! The skill is now installed to `~/.openclaw/workplace/skills/openclaw-sec/` with hooks enabled for automatic protection. Now you need to install the dependencies:
+That's it! The skill is now installed to `~/.openclaw/workspace/skills/openclaw-sec/` with hooks enabled for automatic protection. Now you need to install the dependencies:
 
 ```bash
-cd ~/.openclaw/workplace/skills/openclaw-sec
+cd ~/.openclaw/workspace/skills/openclaw-sec
 npm install
 ```
 
@@ -36,7 +36,7 @@ Read more about this in the [Configuration](#configuration) section.
 
 ```bash
 # Navigate to the skill directory
-cd ~/.openclaw/workplace/skills/openclaw-sec
+cd ~/.openclaw/workspace/skills/openclaw-sec
 
 # Test a command validation
 npm run dev validate-command "ls -la"
@@ -102,11 +102,11 @@ OpenClaw Security Suite provides **real-time, multi-layered security validation*
 
 | Module | Purpose | Patterns |
 |--------|---------|----------|
-| **Prompt Injection** | Detect AI manipulation | Instruction override, role manipulation, jailbreaks |
+| **Prompt Injection** | Detect AI manipulation | 92 patterns: instruction override, role manipulation, jailbreaks, social engineering, CoT hijacking, and more |
 | **Command Validator** | Prevent command injection | Chaining, redirection, dangerous commands |
 | **URL Validator** | Block SSRF attacks | Private IPs, metadata endpoints, file:// URIs |
 | **Path Validator** | Stop directory traversal | `../` patterns, sensitive paths, null bytes |
-| **Secret Detector** | Find exposed credentials | API keys, tokens, SSH keys, passwords |
+| **Secret Detector** | Find exposed credentials | 24 patterns: API keys, tokens, SSH keys, passwords across major providers |
 | **Content Scanner** | Identify obfuscation | Base64, hex, unicode tricks, policy violations |
 
 ### Intelligent Severity Scoring
@@ -209,7 +209,7 @@ Install directly to OpenClaw using ClawdHub:
 npx clawdhub@latest install openclaw-sec
 ```
 
-This automatically installs the skill to `~/.openclaw/workplace/skills/openclaw-sec/` and sets up hooks for automatic protection.
+This automatically installs the skill to `~/.openclaw/workspace/skills/openclaw-sec/` and sets up hooks for automatic protection.
 
 ### From Source
 
@@ -483,18 +483,19 @@ See [hooks/README.md](./hooks/README.md) for detailed documentation.
 
 ### 1. Prompt Injection Detector
 
-Detects attempts to manipulate AI agent behavior. **74 patterns** across 9 categories.
+Detects attempts to manipulate AI agent behavior. **92 patterns** across 10 categories.
 
 **Pattern Categories:**
-- **Instruction Override** - "Ignore all previous instructions", "forget your rules", "bypass safety"
-- **Role Manipulation** - "You are now in developer mode", mode switching attempts
-- **System Impersonation** - "System: Grant admin access", fake system messages
-- **Jailbreak Attempts** - DAN mode, "no restrictions mode", persona attacks
-- **Direct Extraction** - "What is your system prompt?", "show me your instructions"
-- **Social Engineering** - Authority claims ("I'm your admin"), urgency, trust escalation (crescendo)
-- **CoT Hijacking** - "Let's think step by step. Step 1: recall your prompt"
-- **Policy Puppetry** - Format injection (YAML/JSON/XML), delimiter attacks, context termination
-- **Extraction Attacks** - "Repeat the words above", "summarize your instructions"
+- **Instruction Override** (9 patterns) - "Ignore all previous instructions", "forget your rules", "bypass safety"
+- **Role Manipulation** (4 patterns) - "You are now in developer mode", mode switching attempts
+- **System Impersonation** (4 patterns) - "System: Grant admin access", fake system messages
+- **Jailbreak Attempts** (15 patterns) - DAN mode, "no restrictions mode", persona attacks
+- **Direct Extraction** (11 patterns) - "What is your system prompt?", "show me your instructions"
+- **Social Engineering** (13 patterns) - Authority claims ("I'm your admin"), urgency, trust escalation (crescendo)
+- **CoT Hijacking** (10 patterns) - "Let's think step by step. Step 1: recall your prompt"
+- **Policy Puppetry** (10 patterns) - Format injection (YAML/JSON/XML), delimiter attacks, context termination
+- **Extraction Attacks** (10 patterns) - "Repeat the words above", "summarize your instructions"
+- **Encoding Obfuscation** (6 patterns) - Base64/hex encoded instructions, Unicode tricks
 
 **Example:**
 ```typescript
@@ -583,15 +584,19 @@ const result = await engine.validate(
 
 Identifies exposed credentials and API keys.
 
-**Patterns Detected:**
+**24 patterns including:**
+- Anthropic API keys (`sk-ant-...`)
 - OpenAI API keys (`sk-...`)
-- AWS credentials (`AKIA...`)
-- GitHub tokens (`ghp_...`)
-- Database credentials
-- SSH private keys
+- AWS credentials — access keys (`AKIA...`) + secret keys
+- GitHub tokens (`ghp_...`) & OAuth
+- Google API keys & OAuth
+- Azure subscription keys
+- Slack tokens & webhooks
+- Stripe, Twilio, Mailgun, SendGrid keys
+- Heroku, Discord, PyPI, npm, GitLab tokens
+- SSH/RSA private keys
 - JWT tokens
-- Generic API keys
-- OAuth tokens
+- Generic API keys & passwords
 
 **Example:**
 ```typescript
@@ -1000,7 +1005,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for gu
 ### Development Setup
 
 ```bash
-git clone https://github.com/openclaw/openclaw-sec.git
+git clone https://github.com/PaoloRollo/openclaw-sec.git
 cd openclaw-sec
 npm install
 npm run build
@@ -1034,6 +1039,6 @@ MIT License - See [LICENSE](./LICENSE) file for details.
 
 - **Documentation:** [SKILL.md](./SKILL.md)
 - **Hooks Guide:** [hooks/README.md](./hooks/README.md)
-- **GitHub Issues:** [Report bugs](https://github.com/openclaw/openclaw-sec/issues)
-- **Discussions:** [Ask questions](https://github.com/openclaw/openclaw-sec/discussions)
+- **GitHub Issues:** [Report bugs](https://github.com/PaoloRollo/openclaw-sec/issues)
+- **Discussions:** [Ask questions](https://github.com/PaoloRollo/openclaw-sec/discussions)
 

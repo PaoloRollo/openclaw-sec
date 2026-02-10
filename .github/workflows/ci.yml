@@ -7,47 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        node-version: [18, 20, 22]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci --ignore-scripts
-
-      - name: Build
-        run: npm run build
-
-      - name: Run ZeroLeaks pen test
-        run: npm run pentest
-        env:
-          CI: true
-          OPENCLAW_SEC_NO_DB: 1
-
-      - name: Upload test results
-        if: always()
-        continue-on-error: true
-        run: |
-          OPENCLAW_SEC_NO_DB=1 npm run pentest:json > pentest-results.json 2>&1 || true
-          if [ -f pentest-results.json ]; then
-            echo "## ZeroLeaks Pen Test Results" >> $GITHUB_STEP_SUMMARY
-            echo '```json' >> $GITHUB_STEP_SUMMARY
-            cat pentest-results.json | jq '.summary' >> $GITHUB_STEP_SUMMARY 2>/dev/null || cat pentest-results.json >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-          fi
-
-  lint:
+  build:
     runs-on: ubuntu-latest
     
     steps:
@@ -60,7 +20,29 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci --ignore-scripts
+        run: npm ci
 
-      - name: Type check
+      - name: Build
         run: npm run build
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Run ZeroLeaks pen test
+        run: npm run pentest
+        env:
+          OPENCLAW_SEC_NO_DB: 1
+
+      - name: Summary
+        if: always()
+        continue-on-error: true
+        env:
+          OPENCLAW_SEC_NO_DB: 1
+        run: |
+          npm run pentest:json > pentest-results.json 2>&1 || true
+          if [ -f pentest-results.json ]; then
+            echo "## ZeroLeaks Pen Test Results" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            jq '.summary' pentest-results.json >> $GITHUB_STEP_SUMMARY 2>/dev/null || cat pentest-results.json >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
