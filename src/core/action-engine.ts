@@ -63,12 +63,8 @@ export class ActionEngine {
     if (!config) {
       throw new Error('Configuration is required');
     }
-    if (!dbManager) {
-      throw new Error('Database manager is required');
-    }
-
     this.config = config;
-    this.dbManager = dbManager;
+    this.dbManager = dbManager!;
   }
 
   /**
